@@ -40,11 +40,11 @@ def draw_segmentation(images, predictions, alpha=0.4, palette=default_palette):
 
 def draw_lines(images, batch_lines, palette=default_palette):
     for (image, mask_lines) in zip(images, batch_lines):
-        for idx, lines in enumerate(mask_lines):
+        for idx, line in enumerate(mask_lines):
             color = palette[idx % len(palette)]
-            for line in lines:
-                x1, y1, x2, y2 = line[0]
-                cv2.line(image, (x1, y1), (x2, y2), color, thickness=2)
+            x1, y1, x2, y2 = line[0]
+            cv2.line(image, (x1, y1), (x2, y2), color, thickness=2)
+                
 
 
 def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2):

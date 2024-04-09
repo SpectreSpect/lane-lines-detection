@@ -53,5 +53,5 @@ if __name__ == "__main__":
 
     images_to_draw = np.copy(images)
     draw_segmentation(images_to_draw, predictions)
-    #draw_lines(images_to_draw, batch_lines)
+    draw_lines(images_to_draw, batch_lines)
     show_images(images_to_draw)
