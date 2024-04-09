@@ -5,7 +5,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import math
-
+from src.utils import *
 
 
 def load_image(path: str):
@@ -41,5 +41,8 @@ if __name__ == "__main__":
 
     # model.train()
 
-    # image = load_image("data/yolov8_medium-1000_2/images/train/155320867831365400.jpg")  
-    # lane_model.visualize_prediction(image)
+    image = load_image("data/yolov8_medium-1000_2/images/train/155320867831365400.jpg")
+    images = [image] * 4
+
+    show_images(images)
+    #lane_model.visualize_prediction(image)
