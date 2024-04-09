@@ -21,7 +21,7 @@ class LaneLineModel:
             mask_image = np.zeros(masks.orig_shape + (1,), dtype=np.uint8)
             
             mask_lines = []
-            for xy in masks.xy:
+            for xy, cls in zip(masks.xy, result.boxes.cls):
                 cv2.drawContours(mask_image, [np.expand_dims(xy, 1).astype(np.int32)], contourIdx=-1, color=(255), thickness=-1)
                 lines = cv2.HoughLinesP(mask_image, 1, np.pi / 180, threshold=300, minLineLength=25, maxLineGap=30)
             
@@ -35,7 +35,7 @@ class LaneLineModel:
                         if best_line is None or lenght > max_lenght:
                             max_lenght = lenght
                             best_line = line
-                    mask_lines.append(best_line)
+                    mask_lines.append([int(cls), best_line])
                 
                 mask_image[:] = 0
             batch_lines.append(mask_lines)

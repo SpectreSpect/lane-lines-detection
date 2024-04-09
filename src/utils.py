@@ -19,7 +19,7 @@ def draw_segmentation_(image, predict, alpha=0.4, palette=default_palette):
 
     mask_image = np.zeros(image.shape[:-1], dtype=np.uint8)
     for idx, xy in enumerate(predict.masks.xy):
-        color = palette[idx % len(palette)]
+        color = palette[int(predict.boxes.cls[idx]) % len(palette)]
         cv2.drawContours(mask_image, [np.expand_dims(xy, 1).astype(int)], contourIdx=-1, color=(255), thickness=-1)
         
         indices = mask_image != 0 
@@ -38,13 +38,12 @@ def draw_segmentation(images, predictions, alpha=0.4, palette=default_palette):
     return images
 
 
-def draw_lines(images, batch_lines, palette=default_palette):
+def draw_lines(images, batch_lines, palette=default_palette, thickness=4):
     for (image, mask_lines) in zip(images, batch_lines):
-        for idx, line in enumerate(mask_lines):
-            color = palette[idx % len(palette)]
+        for idx, (cls, line) in enumerate(mask_lines):
+            color = palette[cls % len(palette)]
             x1, y1, x2, y2 = line[0]
-            cv2.line(image, (x1, y1), (x2, y2), color, thickness=2)
-                
+            cv2.line(image, (x1, y1), (x2, y2), color, thickness=thickness)
 
 
 def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2):
