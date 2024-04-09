@@ -49,6 +49,7 @@ if __name__ == "__main__":
     images = [image1, image2, image3, image4]
 
     predictions = lane_model.model.predict(images)
+    lines_batch = lane_model.predict(images) # Проверка get_lines()
 
     images_to_draw = np.copy(images)
     draw_segmentation(images_to_draw, predictions)
