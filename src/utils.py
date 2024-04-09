@@ -13,7 +13,7 @@ default_palette = [
     (150, 255, 255)
 ]
 
-def draw_segmentation_cv2(image, predict, alpha=0.4, palette=default_palette):
+def draw_segmentation_(image, predict, alpha=0.4, palette=default_palette):
     if predict.masks is None:
         return []
 
@@ -28,19 +28,14 @@ def draw_segmentation_cv2(image, predict, alpha=0.4, palette=default_palette):
 
     return image
 
-    # rows = np.ceil(len(images) / float(columns))
-    # fig, axes = plt.subplots(nrows=rows, ncols=columns, figsize=(10, 5))
-
-    # axes = axes.flatten()
-    # for (idx, (ax, image)) in enumerate(zip(axes, images)):
-    #     if idx >= len(axes):
-    #         break
-
-    #     ax.imshow(image)
-    #     ax.axis('off')
-
-    # plt.tight_layout()
-    # plt.show()
+def draw_segmentation(images, predictions, alpha=0.4, palette=default_palette):
+    for (image, predict) in zip(images, predictions):
+        draw_segmentation_(image, predict, alpha, palette)
+    
+    if len(images) == 1:
+        return images[0]
+    
+    return images
 
 def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2):
     for slice_id in range(len(images) // count_images_for_ineration):
