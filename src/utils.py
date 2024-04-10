@@ -94,3 +94,49 @@ def view_prediction_video(model, src):
         
     
     cap.release()
+
+
+def get_lines_graph(image, predict, chunk_size=200, offset_size=0):
+    if predict.masks is None:
+        return []
+    
+    masks = predict.masks
+
+    mask_image = np.zeros(masks.orig_shape + (1,), dtype=np.uint8)
+
+    for xy in masks.xy:
+        cv2.drawContours(mask_image, [np.expand_dims(xy, 1).astype(np.int32)], contourIdx=-1, color=(255), thickness=-1)
+
+    count_chunks_x = math.ceil(masks.orig_shape[1] / (chunk_size + offset_size))
+    count_chunks_y = math.ceil(masks.orig_shape[0] / (chunk_size + offset_size))
+
+    lines = [[]] * count_chunks_x
+    for x in range(count_chunks_x):
+        lines[x] = [[]] * count_chunks_y
+        for y in range(count_chunks_y):
+            chunk_x_min = (chunk_size + offset_size) * x
+            chunk_x_max = (chunk_size + offset_size) * x + chunk_size
+
+            chunk_y_min = (chunk_size + offset_size) * y
+            chunk_y_max = (chunk_size + offset_size) * y + chunk_size
+
+            cv2.rectangle(image, (chunk_x_min, chunk_y_min), (chunk_x_max, chunk_y_max), (y / count_chunks_y * 255, 0, x / count_chunks_x * 255), 3)
+
+            chunk = mask_image[chunk_y_min:chunk_y_max, chunk_x_min:chunk_x_max]
+            
+            chunk_lines = cv2.HoughLinesP(chunk, 1, np.pi / 180, threshold=100, minLineLength=25, maxLineGap=30)
+            if chunk_lines is not None:
+                lines[x][y] = chunk_lines
+
+                for line in chunk_lines:
+                    x1, y1, x2, y2 = line[0]
+                    x1 += chunk_x_min
+                    y1 += chunk_y_min
+                    x2 += chunk_x_min
+                    y2 += chunk_y_min
+                    cv2.line(image, (x1, y1), (x2, y2), default_palette[0], thickness=3)
+
+            else:
+                lines[x][y] = []
+    
+    return lines
