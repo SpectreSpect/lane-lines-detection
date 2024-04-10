@@ -22,6 +22,8 @@ class LaneLineModel:
             
             mask_lines = []
             for xy, cls in zip(masks.xy, result.boxes.cls):
+                if xy.shape[0] == 0:
+                    break
                 cv2.drawContours(mask_image, [np.expand_dims(xy, 1).astype(np.int32)], contourIdx=-1, color=(255), thickness=-1)
                 lines = cv2.HoughLinesP(mask_image, 1, np.pi / 180, threshold=300, minLineLength=25, maxLineGap=30)
             
