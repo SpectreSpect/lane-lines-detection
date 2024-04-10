@@ -69,11 +69,12 @@ def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2
             
 def view_prediction_video(model, src):
     cap = cv2.VideoCapture(src)
-    # if not cap.isOpened():
-    #     print("Не удалось открыть видеофайл.")
-    #     exit()
+    if not cap.isOpened():
+        print("Не удалось открыть файл.")
+        cap.release()
+        return
     
-    while True:
+    while cap.isOpened():
         ret, image = cap.read()
         if not ret:
             break
