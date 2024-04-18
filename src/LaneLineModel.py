@@ -41,10 +41,20 @@ class LaneLineModel:
         lines = self.get_lines(results)
         return lines
     
-    def generate_prediction_plots(self, images):
+    def generate_prediction_plots_yolo(self, images):
         results = self.model.predict(images)
         plot_images = [result.plot() for result in results]
         return plot_images
+    
+    def generate_prediction_plots(self, images):
+        results = self.model.predict(images)
+        batch_lines = self.get_lines(results)
+
+        images_to_draw = np.copy(images)
+        draw_segmentation(images_to_draw, results)
+        draw_curves(images_to_draw, batch_lines)
+
+        return images_to_draw
     
     def visualize_prediction(self, image):
         result = self.model.predict([image])[0]
