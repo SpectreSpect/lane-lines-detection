@@ -5,6 +5,13 @@ import yaml
 import numpy as np
 import cv2
 from src.utils import *
+import os
+
+
+class LaneLine():
+    def __init__(self, points: np.ndarray, label: int):
+        self.points = points
+        self.label = label
 
 
 class LaneLineModel:
@@ -16,19 +23,23 @@ class LaneLineModel:
         batch_lines = get_lines_contours(results)
         return batch_lines
 
-    def train(self, dataset_path, epochs, train_path="images/train", val_path="images/val"):
-
+    def train(self, dataset_path, epochs, output_directory="runs", train_path="images/train", val_path="images/valid"):
         with open('config.yaml', 'r') as file:
             config = yaml.safe_load(file)
 
-            config['path'] = dataset_path
+            absolute_path = os.path.abspath(dataset_path)
+
+            config['path'] = absolute_path
             config['train'] = train_path
             config['val'] = val_path
 
+        if not os.path.exists("tmp"):
+            os.makedirs("tmp")
+        
         with open("tmp/tmp_config.yaml", 'w') as file:
             yaml.dump(config, file)
         
-        results = self.model.train(data="tmp/tmp_config.yaml", epochs=epochs)
+        results = self.model.train(data="tmp/tmp_config.yaml", epochs=epochs, project=output_directory)
         return results
 
     def predict(self, images):
