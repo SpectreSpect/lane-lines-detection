@@ -62,6 +62,8 @@ def draw_lines(images, batch_curves, palette=default_palette, thickness=4):
 
 
 def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2):
+    columns = min(len(images), columns)
+    count_images_for_ineration = min(len(images), count_images_for_ineration)
     for slice_id in range(len(images) // count_images_for_ineration):
         rows = math.ceil(count_images_for_ineration / float(columns))
         fig, axes = plt.subplots(nrows=rows, ncols=columns, figsize=figsize)
@@ -69,7 +71,10 @@ def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2
         slice_min = slice_id * count_images_for_ineration
         slice_max = (slice_id + 1) * count_images_for_ineration
 
-        axes = axes.flatten()
+        if rows * columns > 1:
+            axes = axes.flatten()
+        else:
+            axes = [axes]
         for (idx, (ax, image)) in enumerate(zip(axes, images[slice_min:slice_max])):
             if idx >= len(axes):
                 break
@@ -79,8 +84,8 @@ def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2
 
         plt.tight_layout()
         plt.show()
-           
-            
+
+
 def view_prediction_video(model, src):
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():

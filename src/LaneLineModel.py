@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 from src.utils import *
 import os
+from collections.abc import Iterable
 
 
 class LaneLineModel:
@@ -45,7 +46,7 @@ class LaneLineModel:
         return lines
     
     def generate_prediction_plots_yolo(self, images):
-        results = self.model.predict(images)
+        results = self.model.predict(np.array(images))
         plot_images = [result.plot() for result in results]
         return plot_images
     
@@ -59,11 +60,7 @@ class LaneLineModel:
 
         return images_to_draw
     
-    def visualize_prediction(self, image):
-        result = self.model.predict([image])[0]
-        plot_image = result.plot()
-        plt.imshow(plot_image)
-        plt.axis('off')
-        plt.tight_layout()
-        plt.show()
-        return plot_image
+    def visualize_prediction(self, images, yolo_visualisator=False):
+        plot_images = self.generate_prediction_plots_yolo(images) if yolo_visualisator else self.generate_prediction_plots(images)
+        show_images(plot_images)
+        return plot_images

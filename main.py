@@ -50,7 +50,8 @@ if __name__ == "__main__":
     # draw_curves(images_to_draw, batch_lines)
     # show_images(images_to_draw)
 
-    images_to_draw = lane_model.generate_prediction_plots(images)
-    show_images(images_to_draw)
+    lane_model.visualize_prediction(images)
+    #images_to_draw = lane_model.generate_prediction_plots(images)
+    #show_images(images_to_draw)
 
     #view_prediction_video(lane_model, "data/road-video-forest.mp4")
