@@ -34,7 +34,7 @@ def load_images(path: str, max_images_count=-1) -> list:
 if __name__ == "__main__":
     lane_model = LaneLineModel("models/sizefull-ep20/model.pt")
     # lane_model.train("data/yolov8-size1000-val02-fmasks", 2, output_directory="runs")
-    lane_model.predict()
+    #lane_model.predict()
 
     # image1 = load_image("data/yolov8_medium-1000_2/images/train/155727749493776200.jpg")
     # image2 = load_image("data/yolov8_medium-1000_2/images/train/150776258831391200.jpg")
