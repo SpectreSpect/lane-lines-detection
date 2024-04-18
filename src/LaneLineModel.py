@@ -46,7 +46,7 @@ class LaneLineModel:
         return lines
     
     def generate_prediction_plots_yolo(self, images):
-        results = self.model.predict(np.array(images))
+        results = self.model.predict(images)
         plot_images = [result.plot() for result in results]
         return plot_images
     
@@ -60,7 +60,7 @@ class LaneLineModel:
 
         return images_to_draw
     
-    def visualize_prediction(self, images, yolo_visualisator=False):
-        plot_images = self.generate_prediction_plots_yolo(images) if yolo_visualisator else self.generate_prediction_plots(images)
+    def visualize_prediction(self, images, yolo_vis=False):
+        plot_images = self.generate_prediction_plots_yolo(images) if yolo_vis else self.generate_prediction_plots(images)
         show_images(plot_images)
         return plot_images
