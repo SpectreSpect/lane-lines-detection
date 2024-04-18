@@ -3,16 +3,35 @@ import math
 import cv2
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString, Polygon
+from timeit import default_timer as timer
 
+
+# default_palette = [
+#     (255, 0, 0),
+#     (0, 255, 0),
+#     (0, 0, 255),
+#     (0, 255, 255), 
+#     (255, 0, 255), 
+#     (255, 255, 0), 
+#     (150, 255, 255)
+# ]
 
 default_palette = [
-    (255, 0, 0),
-    (0, 255, 0),
-    (0, 0, 255),
-    (0, 255, 255), 
-    (255, 0, 255), 
-    (255, 255, 0), 
-    (150, 255, 255)
+    (0, 0, 0), # unkown
+    (85, 172, 238), # white-dash
+    (120, 177, 89), # white-solid
+    (0, 0, 0), # double-white-dash
+    (0, 0, 0), # double-white-solid
+    (0, 0, 0), # white-ldash-rsolid
+    (0, 0, 0), # white-lsolid-rdash
+    (0, 0, 0), # yellow-dash
+    (253, 203, 88), # yellow-solid
+    (0, 0, 0), # double-yellow-dash
+    (244, 144, 12), # double-yellow-solid
+    (221, 46, 68), # yellow-ldash-rsolid
+    (0, 0, 0), # yellow-lsolid-rdash
+    (0, 0, 0), # left-curbside
+    (0, 0, 0), # right-curbside
 ]
 
 
@@ -32,6 +51,7 @@ def draw_segmentation_(image, predict, alpha=0.4, palette=default_palette):
         if xy.shape[0] == 0:
             break
         color = palette[int(predict.boxes.cls[idx]) % len(palette)]
+        color = (color[2], color[1], color[0])
         cv2.drawContours(mask_image, [np.expand_dims(xy, 1).astype(int)], contourIdx=-1, color=(255), thickness=-1)
         
         indices = mask_image != 0 
@@ -61,6 +81,7 @@ def draw_curves(images, batch_curves, palette=default_palette, thickness=4):
     for (image, mask_curves) in zip(images, batch_curves):
         for idx, lane_line in enumerate(mask_curves):
             color = palette[lane_line.label % len(palette)]
+            color = (color[2], color[1], color[0])
             for id in range(1, len(lane_line.points)):
                 cv2.line(image, lane_line.points[id - 1], lane_line.points[id], color, thickness=thickness)
 
@@ -84,23 +105,36 @@ def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2
         plt.tight_layout()
         plt.show()
             
-def view_prediction_video(model, src):
+def view_prediction_video(model, src, verbose=0):
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
         print("Не удалось открыть файл.")
         cap.release()
         return
     
+
+    mean_hertz = 0
+    mean_elapsed_time = 0
     i = 0
-    
     while cap.isOpened():
         ret, image = cap.read()
         if not ret:
             break
         
         # Обработка изображения
+        start = timer()
+        predictions = model.model.predict([image], verbose=False)
+        end = timer()
+        elapsed_time = end - start
+        hertz = 1.0 / elapsed_time
+        
+        mean_hertz += hertz 
+        mean_elapsed_time += elapsed_time * 1000.0 # ms
 
-        predictions = model.model.predict([image])
+        print(f"frame: {i + 1}     elapsed time: {round(elapsed_time * 1000.0, 2)} ms")
+        print(f"hertz: {round(hertz, 2)}     mean hertz: {round(mean_hertz / float(i + 1), 2)}    mean elapsed time: {round(mean_elapsed_time / float(i + 1), 2)} ms")
+        print()
+
         batch_lines = model.get_lines(predictions)
 
         draw_segmentation([image], predictions)

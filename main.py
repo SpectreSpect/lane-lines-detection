@@ -50,4 +50,4 @@ if __name__ == "__main__":
     # draw_curves(images_to_draw, batch_lines)
     # show_images(images_to_draw)
 
-    view_prediction_video(lane_model, "data/road-video-forest.mp4")
+    view_prediction_video(lane_model, "data/videos/road-video-russia.mp4")
