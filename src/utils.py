@@ -4,6 +4,7 @@ import cv2
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString, Polygon
 
+
 default_palette = [
     (255, 0, 0),
     (0, 255, 0),
@@ -13,6 +14,14 @@ default_palette = [
     (255, 255, 0), 
     (150, 255, 255)
 ]
+
+
+class LaneLine():
+    def __init__(self, points: np.ndarray, label: int):
+        self.points = points
+        self.label = label
+
+
 
 def draw_segmentation_(image, predict, alpha=0.4, palette=default_palette):
     if predict.masks is None:
@@ -43,18 +52,17 @@ def draw_segmentation(images, predictions, alpha=0.2, palette=default_palette):
 
 def draw_lines(images, batch_lines, palette=default_palette, thickness=8):
     for (image, mask_lines) in zip(images, batch_lines):
-        for idx, (cls, line) in enumerate(mask_lines):
-            color = palette[cls % len(palette)]
-            x1, y1, x2, y2 = line[0]
-            cv2.line(image, (x1, y1), (x2, y2), color, thickness=thickness)
+        for idx, lane_line in enumerate(mask_lines):
+            color = palette[lane_line.label % len(palette)]
+            cv2.line(image, tuple(lane_line.points[0].tolist()), tuple(lane_line.points[1].tolist()), color, thickness=thickness)
 
 
 def draw_curves(images, batch_curves, palette=default_palette, thickness=4):
     for (image, mask_curves) in zip(images, batch_curves):
-        for idx, (cls, curve) in enumerate(mask_curves):
-            color = palette[cls % len(palette)]
-            for id in range(1, len(curve)):
-                cv2.line(image, curve[id - 1].astype(int), curve[id].astype(int), color, thickness=thickness)
+        for idx, lane_line in enumerate(mask_curves):
+            color = palette[lane_line.label % len(palette)]
+            for id in range(1, len(lane_line.points)):
+                cv2.line(image, lane_line.points[id - 1], lane_line.points[id], color, thickness=thickness)
 
 
 def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2):
@@ -135,7 +143,7 @@ def get_straight_lines(results):
                     if best_line is None or lenght > max_lenght:
                         max_lenght = lenght
                         best_line = line
-                mask_lines.append([int(cls), best_line])
+                mask_lines.append(LaneLine(np.reshape(np.array(list(best_line), dtype=np.int32), (2, 2)), int(cls)))
             
             mask_image[:] = 0
         batch_lines.append(mask_lines)
@@ -182,7 +190,14 @@ def correct_point(xy, const_point_id, moving_point_id, max_distance, dist_accum_
     return best_point_id
 
 
-def get_line_contour(predict, max_distance=100, min_id_dis_ratio=0.5, edge_point_dis=20, dist_accum_factor=0.8, n_accum=5, tolerance=0.0001):
+def get_line_contour(
+        predict, 
+        max_distance=100, 
+        min_id_dis_ratio=0.5, 
+        edge_point_dis=20, 
+        dist_accum_factor=0.8, 
+        n_accum=5, 
+        tolerance=0.0001) -> list:
     masks = predict.masks
     if masks is None:
         return []
@@ -274,7 +289,7 @@ def get_line_contour(predict, max_distance=100, min_id_dis_ratio=0.5, edge_point
             
             i += 1
         if count_pass >= min_id_dis:
-            mask_lines.append([int(cls), []])
+            mask_lines.append(LaneLine(np.array([], dtype=np.int32), int(cls)))
             break
             
         start_point2_id = correct_point(points,start_point1_id, start_point2_id, max_distance, dist_accum_factor, n_accum)
@@ -301,7 +316,7 @@ def get_line_contour(predict, max_distance=100, min_id_dis_ratio=0.5, edge_point
                     else:
                         line = [(points[moving_point1_id] + points[moving_point2_id]) / 2] + line
         
-        mask_lines.append([int(cls), line])
+        mask_lines.append(LaneLine(np.array(line, dtype=np.int32), int(cls)))
 
     return mask_lines
         

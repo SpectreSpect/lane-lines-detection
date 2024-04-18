@@ -8,12 +8,6 @@ from src.utils import *
 import os
 
 
-class LaneLine():
-    def __init__(self, points: np.ndarray, label: int):
-        self.points = points
-        self.label = label
-
-
 class LaneLineModel:
     def __init__(self, path: str):
         self.model = YOLO(path)
