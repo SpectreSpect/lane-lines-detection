@@ -32,7 +32,7 @@ def load_images(path: str, max_images_count=-1) -> list:
 
 
 if __name__ == "__main__":
-    lane_model = LaneLineModel("models/sizefull-ep20/model.pt")
+    lane_model = LaneLineModel("models/sizefull-ep20/model.pt", True)
     # lane_model.train("data/yolov8-size1000-val02-fmasks", 2, output_directory="runs")
     #lane_model.predict()
 

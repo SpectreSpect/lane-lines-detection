@@ -9,12 +9,15 @@ import os
 
 
 class LaneLineModel:
-    def __init__(self, path: str):
+    def __init__(self, path: str, use_curve_line=True):
         self.model = YOLO(path)
+        self.use_curve_line = use_curve_line
     
     def get_lines(self, results):
-        #batch_lines = get_straight_lines(results)
-        batch_lines = get_lines_contours(results)
+        if self.use_curve_line:
+            batch_lines = get_lines_contours(results)
+        else:
+            batch_lines = get_straight_lines(results)
         return batch_lines
 
     def train(self, dataset_path, epochs, output_directory="runs", train_path="images/train", val_path="images/valid"):
@@ -52,7 +55,7 @@ class LaneLineModel:
 
         images_to_draw = np.copy(images)
         draw_segmentation(images_to_draw, results)
-        draw_curves(images_to_draw, batch_lines)
+        draw_lines(images_to_draw, batch_lines)
 
         return images_to_draw
     

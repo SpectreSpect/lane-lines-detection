@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from shapely.geometry import LineString, Polygon
 
 
+
 default_palette = [
     (255, 0, 0),
     (0, 255, 0),
@@ -14,6 +15,7 @@ default_palette = [
     (255, 255, 0), 
     (150, 255, 255)
 ]
+
 
 
 class LaneLine():
@@ -40,6 +42,7 @@ def draw_segmentation_(image, predict, alpha=0.4, palette=default_palette):
 
     return image
 
+
 def draw_segmentation(images, predictions, alpha=0.2, palette=default_palette):
     for (image, predict) in zip(images, predictions):
         draw_segmentation_(image, predict, alpha, palette)
@@ -50,14 +53,7 @@ def draw_segmentation(images, predictions, alpha=0.2, palette=default_palette):
     return images
 
 
-def draw_lines(images, batch_lines, palette=default_palette, thickness=8):
-    for (image, mask_lines) in zip(images, batch_lines):
-        for idx, lane_line in enumerate(mask_lines):
-            color = palette[lane_line.label % len(palette)]
-            cv2.line(image, tuple(lane_line.points[0].tolist()), tuple(lane_line.points[1].tolist()), color, thickness=thickness)
-
-
-def draw_curves(images, batch_curves, palette=default_palette, thickness=4):
+def draw_lines(images, batch_curves, palette=default_palette, thickness=4):
     for (image, mask_curves) in zip(images, batch_curves):
         for idx, lane_line in enumerate(mask_curves):
             color = palette[lane_line.label % len(palette)]
@@ -83,6 +79,7 @@ def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2
 
         plt.tight_layout()
         plt.show()
+           
             
 def view_prediction_video(model, src):
     cap = cv2.VideoCapture(src)
@@ -105,7 +102,7 @@ def view_prediction_video(model, src):
 
         draw_segmentation([image], predictions)
         #draw_lines([image], batch_lines)
-        draw_curves([image], batch_lines)
+        draw_lines([image], batch_lines)
         cv2.imshow('prediction video', image)
 
         key_code = cv2.waitKey(5) & 0xFF
@@ -122,7 +119,8 @@ def get_straight_lines(results):
     for result in results:
         masks = result.masks
         if masks is None:
-            return []
+            batch_lines.append([])
+            continue
 
         mask_image = np.zeros(masks.orig_shape + (1,), dtype=np.uint8)
         
