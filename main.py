@@ -42,5 +42,9 @@ if __name__ == "__main__":
 
     images = [image1, image2, image3, image4]
 
-    lane_model.visualize_prediction(images)
-    #view_prediction_video(lane_model, "data/road-video-forest.mp4")
+    #lane_model.visualize_prediction(images)
+
+    # view_prediction_video(lane_model, "data/example.mp4") #1
+    view_prediction_video(lane_model, "data/road-video-forest.mp4") #2
+    # view_prediction_video(lane_model, "data/road-video.mp4") #3
+    

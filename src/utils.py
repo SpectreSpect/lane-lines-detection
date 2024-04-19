@@ -3,6 +3,7 @@ import math
 import cv2
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString, Polygon
+import time
 
 
 
@@ -19,9 +20,11 @@ default_palette = [
 
 
 class LaneLine():
-    def __init__(self, points: np.ndarray, label: int):
+    def __init__(self, points: np.ndarray, label: int, elapsed_time=0, mask_count_points=0):
         self.points = points
         self.label = label
+        self.elapsed_time = elapsed_time
+        self.mask_count_points=mask_count_points
 
 
 
@@ -86,6 +89,20 @@ def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2
         plt.show()
 
 
+def get_mean_elapsed_time(batch_lines: list):
+    mean_elapsed_time = 0
+    count = 0
+    for masks in batch_lines:
+        for line in masks:
+            mean_elapsed_time += line.elapsed_time
+            count += 1
+    
+    if count == 0:
+        return 0
+
+    return mean_elapsed_time / count
+
+
 def view_prediction_video(model, src):
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
@@ -95,15 +112,47 @@ def view_prediction_video(model, src):
     
     i = 0
     
+    count_tests = 500
+    mean_elapsed_time = 0
+
+    max_count_points = 5000
+    measurements = np.zeros((max_count_points,), dtype=np.float32)
+    hits = np.zeros((max_count_points,), dtype=np.int32)
+
     while cap.isOpened():
         ret, image = cap.read()
         if not ret:
             break
         
+        print(f"id: {i}")
+
         # Обработка изображения
 
-        predictions = model.model.predict([image])
+        predictions = model.model.predict([image], verbose=False)
+
         batch_lines = model.get_lines(predictions)
+
+        for masks in batch_lines:
+            for line in masks:
+                measurements[line.mask_count_points] += line.elapsed_time
+                hits[line.mask_count_points] += 1
+
+        mean_elapsed_time += get_mean_elapsed_time(batch_lines)
+
+
+        if i > 0 and i % count_tests == 0:
+            print(f"Test {i // count_tests}. Elapsed time = {mean_elapsed_time / count_tests * 1000}")
+
+            # measurements /= hits
+            # x = np.linspace(0, max_count_points, max_count_points)
+            # plt.plot(x, measurements)
+            # plt.title("Сложность алгоритма")
+            # plt.xlabel("Количество точек контура")
+            # plt.ylabel("Время")
+            # plt.show()
+            # measurements *= hits
+
+            mean_elapsed_time = 0
 
         draw_segmentation([image], predictions)
         #draw_lines([image], batch_lines)
@@ -133,6 +182,8 @@ def get_straight_lines(results):
         for xy, cls in zip(masks.xy, result.boxes.cls):
             if xy.shape[0] == 0:
                 break
+
+            t1 = time.time()
             cv2.drawContours(mask_image, [np.expand_dims(xy, 1).astype(np.int32)], contourIdx=-1, color=(255), thickness=-1)
             lines = cv2.HoughLinesP(mask_image, 1, np.pi / 180, threshold=100, minLineLength=25, maxLineGap=30)
         
@@ -146,7 +197,9 @@ def get_straight_lines(results):
                     if best_line is None or lenght > max_lenght:
                         max_lenght = lenght
                         best_line = line
-                mask_lines.append(LaneLine(np.reshape(np.array(list(best_line), dtype=np.int32), (2, 2)), int(cls)))
+
+                t2 = time.time()
+                mask_lines.append(LaneLine(np.reshape(np.array(list(best_line), dtype=np.int32), (2, 2)), int(cls), t2-t1, int(xy.shape[0])))
             
             mask_image[:] = 0
         batch_lines.append(mask_lines)
@@ -207,6 +260,7 @@ def get_line_contour(
     
     mask_lines = []
     for xyn, cls in zip(masks.xyn, predict.boxes.cls):
+        t1 = time.time()
         simplified_polygon = Polygon(xyn).simplify(tolerance, preserve_topology=True)
         points = np.array(simplified_polygon.exterior.coords)
         points *= np.array([masks.orig_shape[1], masks.orig_shape[0]])
@@ -319,7 +373,8 @@ def get_line_contour(
                     else:
                         line = [(points[moving_point1_id] + points[moving_point2_id]) / 2] + line
         
-        mask_lines.append(LaneLine(np.array(line, dtype=np.int32), int(cls)))
+        t2 = time.time()
+        mask_lines.append(LaneLine(np.array(line, dtype=np.int32), int(cls), t2-t1, len(line)))
 
     return mask_lines
         
