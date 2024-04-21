@@ -39,7 +39,7 @@ if __name__ == "__main__":
     # image3 = load_image("data/yolov8_medium-1000_2/images/train/155320868381244300.jpg")
     # image4 = load_image("data/yolov8_medium-1000_2/images/train/155320867831365400.jpg")
 
-    images = [image1, image2, image3, image4]
+    # images = [image1, image2, image3, image4]
 
     #lane_model.visualize_prediction(images)
     # view_prediction_video(lane_model, "data/videos/road-video-russia.mp4")
