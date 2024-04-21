@@ -5,16 +5,21 @@ import yaml
 import numpy as np
 import cv2
 from src.utils import *
+from src.utiles_for_test import *
 import os
+from collections.abc import Iterable
 
 
 class LaneLineModel:
-    def __init__(self, path: str):
+    def __init__(self, path: str, use_curve_line=True):
         self.model = YOLO(path)
+        self.use_curve_line = use_curve_line
     
     def get_lines(self, results):
-        #batch_lines = get_straight_lines(results)
-        batch_lines = get_lines_contours(results)
+        if self.use_curve_line:
+            batch_lines = get_lines_contours(results)
+        else:
+            batch_lines = get_straight_lines(results)
         return batch_lines
 
     def train(self, dataset_path, epochs, output_directory="runs", train_path="images/train", val_path="images/valid"):
@@ -41,16 +46,22 @@ class LaneLineModel:
         lines = self.get_lines(results)
         return lines
     
-    def generate_prediction_plots(self, images):
+    def generate_prediction_plots_yolo(self, images):
         results = self.model.predict(images)
         plot_images = [result.plot() for result in results]
         return plot_images
     
-    def visualize_prediction(self, image):
-        result = self.model.predict([image])[0]
-        plot_image = result.plot()
-        plt.imshow(plot_image)
-        plt.axis('off')
-        plt.tight_layout()
-        plt.show()
-        return plot_image
+    def generate_prediction_plots(self, images):
+        results = self.model.predict(images)
+        batch_lines = self.get_lines(results)
+
+        images_to_draw = np.copy(images)
+        draw_segmentation(images_to_draw, results)
+        draw_lines(images_to_draw, batch_lines)
+
+        return images_to_draw
+    
+    def visualize_prediction(self, images, yolo_vis=False):
+        plot_images = self.generate_prediction_plots_yolo(images) if yolo_vis else self.generate_prediction_plots(images)
+        show_images(plot_images)
+        return plot_images
