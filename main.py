@@ -36,6 +36,8 @@ if __name__ == "__main__":
     # lane_model.train("data/yolov8-size1000-val02-fmasks", 2, output_directory="runs")
     #lane_model.predict()
 
+    print(lane_model.model)
+
     # image1 = load_image("data/yolov8_medium-1000_2/images/train/155727749493776200.jpg")
     # image2 = load_image("data/yolov8_medium-1000_2/images/train/150776258831391200.jpg")
     # image3 = load_image("data/yolov8_medium-1000_2/images/train/155320868381244300.jpg")
@@ -50,4 +52,4 @@ if __name__ == "__main__":
     # draw_curves(images_to_draw, batch_lines)
     # show_images(images_to_draw)
 
-    view_prediction_video(lane_model, "data/videos/road-video-russia.mp4")
+    # view_prediction_video(lane_model, "data/videos/road-video-russia.mp4")
