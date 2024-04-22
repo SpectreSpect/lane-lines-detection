@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import math
 from src.utils import *
 from src.dataset_balancing import *
+import re
 
 
 def load_image(path: str):
@@ -34,7 +35,36 @@ def load_images(path: str, max_images_count=-1) -> list:
 if __name__ == "__main__":
     model = LaneLineModel("models/sizefull-ep20/model.pt")
 
-    preview_prediction_video(model, "data/videos/road-video-russia.mp4", "config.yaml")
+    # video_segments = read_video_segments("video-segments.txt")
+    video_segments = read_video_segments("video-segments.txt")
+# 
+
+    # cap = cv2.VideoCapture("road-video-russia-PLOTTED.mp4")
+    cap = cv2.VideoCapture("data/videos/road-video-russia.mp4")
+    if not cap.isOpened():
+        print("Can't open the video.")
+        cap.release()
+
+    video_segment_to_train_data(model, cap, video_segments[0], "test/images", "test/labels")
+
+
+
+    # video_segments = read_video_segments("video-segments.txt")
+    # for video_segment in video_segments:
+    #     print(f"{video_segment.start_time}s {video_segment.end_time}s {video_segment.substitutions}")
+
+
+    # model = LaneLineModel("models/sizefull-ep20/model.pt")
+
+    # save_plotted_video(model, "data/videos/road-video-russia.mp4", "road-video-russia-PLOTTED.mp4")
+
+    # (1:20, 1:30, [(5, 2), (6, 7), (9, 11)])
+
+    # "20" = 20 sec
+    # "1:20" = 1 minute 20 seconds
+    # "3:01:20" = 3 hours 1 minute 20 seconds
+
+    # preview_prediction_video(model, "data/videos/road-video-russia.mp4", "config.yaml")
 
 
 

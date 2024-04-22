@@ -437,3 +437,23 @@ def get_lines_contours(predicts, max_distance=100, min_id_dis_ratio=0.5, edge_po
     for predict in predicts:
         lines.append(get_line_contour(predict, max_distance, min_id_dis_ratio, edge_point_dis, dist_accum_factor, n_accum))
     return lines
+
+
+def str_to_seconds(string: str):
+    splits = string.split(':')
+    
+    seconds = 0
+    minutes = 0
+    hours = 0
+    if len(splits) == 1:
+        seconds = int(splits[0])
+    elif len(splits) == 2:
+        minutes = int(splits[0])
+        seconds = int(splits[1])
+    elif len(splits) == 3:
+        hours = int(splits[0])
+        minutes = int(splits[1])
+        seconds = int(splits[2])
+    
+    output = seconds + minutes * 60 + hours * 60 * 60
+    return output
