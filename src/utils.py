@@ -3,13 +3,9 @@ import math
 import cv2
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString, Polygon
-<<<<<<< HEAD
 from timeit import default_timer as timer
-=======
 import time
-
->>>>>>> 64e1aafa95c7ed51ef233de65ba7689e5299be7d
-
+import os
 
 # default_palette = [
 #     (255, 0, 0),
@@ -111,10 +107,6 @@ def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2
 
         plt.tight_layout()
         plt.show()
-<<<<<<< HEAD
-            
-def view_prediction_video(model, src, verbose=0):
-=======
 
 
 def get_mean_elapsed_time(batch_lines: list):
@@ -130,9 +122,15 @@ def get_mean_elapsed_time(batch_lines: list):
 
     return mean_elapsed_time / count
 
+def paint_str(string: str, color):
+    start = "\033[38;2;{};{};{}m"
+    end = "\033[0m"
+    text = start + string + end
+    return text.format(color[0], color[1], color[2])
+    # print(text.format(color[0], color[1], color[2]))
 
-def view_prediction_video(model, src):
->>>>>>> 64e1aafa95c7ed51ef233de65ba7689e5299be7d
+
+def view_prediction_video(model, src, save_predictions=False, verbose=0):
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
         print("Не удалось открыть файл.")
@@ -143,43 +141,46 @@ def view_prediction_video(model, src):
     mean_hertz = 0
     mean_elapsed_time = 0
     i = 0
-<<<<<<< HEAD
-=======
-    
+
     count_tests = 500
     mean_elapsed_time = 0
 
     max_count_points = 5000
     measurements = np.zeros((max_count_points,), dtype=np.float32)
     hits = np.zeros((max_count_points,), dtype=np.int32)
+    
+    ret_images = []
+    ret_predictions = []
 
->>>>>>> 64e1aafa95c7ed51ef233de65ba7689e5299be7d
     while cap.isOpened():
         ret, image = cap.read()
         if not ret:
             break
         
-        print(f"id: {i}")
+        if verbose != 0:
+            print(f"id: {i}")
 
         # Обработка изображения
         start = timer()
         predictions = model.model.predict([image], verbose=False)
         end = timer()
+
+        if save_predictions:
+            ret_images.append(image.copy())
+            # cv2.imwrite(os.path.join("test", "sdfsdfsdf" + ".jpg"), ret_images[0])
+            ret_predictions.append(predictions[0])
+
         elapsed_time = end - start
         hertz = 1.0 / elapsed_time
         
         mean_hertz += hertz 
         mean_elapsed_time += elapsed_time * 1000.0 # ms
 
-        print(f"frame: {i + 1}     elapsed time: {round(elapsed_time * 1000.0, 2)} ms")
-        print(f"hertz: {round(hertz, 2)}     mean hertz: {round(mean_hertz / float(i + 1), 2)}    mean elapsed time: {round(mean_elapsed_time / float(i + 1), 2)} ms")
-        print()
+        if verbose != 0:
+            print(f"frame: {i + 1}     elapsed time: {round(elapsed_time * 1000.0, 2)} ms")
+            print(f"hertz: {round(hertz, 2)}     mean hertz: {round(mean_hertz / float(i + 1), 2)}    mean elapsed time: {round(mean_elapsed_time / float(i + 1), 2)} ms")
+            print()
 
-<<<<<<< HEAD
-=======
-        predictions = model.model.predict([image], verbose=False)
-
->>>>>>> 64e1aafa95c7ed51ef233de65ba7689e5299be7d
         batch_lines = model.get_lines(predictions)
 
         for masks in batch_lines:
@@ -191,7 +192,8 @@ def view_prediction_video(model, src):
 
 
         if i > 0 and i % count_tests == 0:
-            print(f"Test {i // count_tests}. Elapsed time = {mean_elapsed_time / count_tests * 1000}")
+            if verbose != 0:
+                print(f"Test {i // count_tests}. Elapsed time = {mean_elapsed_time / count_tests * 1000}")
 
             # measurements /= hits
             # x = np.linspace(0, max_count_points, max_count_points)
@@ -216,6 +218,7 @@ def view_prediction_video(model, src):
         i += 1
     
     cap.release()
+    return ret_images, ret_predictions
 
 
 def get_straight_lines(results):

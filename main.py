@@ -6,7 +6,7 @@ import os
 import matplotlib.pyplot as plt
 import math
 from src.utils import *
-import torch
+from src.dataset_balancing import *
 
 
 def load_image(path: str):
@@ -32,14 +32,15 @@ def load_images(path: str, max_images_count=-1) -> list:
 
 
 if __name__ == "__main__":
-    lane_model = LaneLineModel("models/sizefull-ep20/model.pt", use_curve_line=True)
-    # lane_model.train("data/yolov8-size1000-val02-fmasks", 2, output_directory="runs")
-    # image1 = load_image("data/yolov8_medium-1000_2/images/train/155727749493776200.jpg")
-    # image2 = load_image("data/yolov8_medium-1000_2/images/train/150776258831391200.jpg")
-    # image3 = load_image("data/yolov8_medium-1000_2/images/train/155320868381244300.jpg")
-    # image4 = load_image("data/yolov8_medium-1000_2/images/train/155320867831365400.jpg")
+    model = LaneLineModel("models/sizefull-ep20/model.pt")
 
-    # images = [image1, image2, image3, image4]
+    preview_prediction_video(model, "data/videos/road-video-russia.mp4", "config.yaml")
 
-    #lane_model.visualize_prediction(images)
-    # view_prediction_video(lane_model, "data/videos/road-video-russia.mp4")
+
+
+    # images, predictions = view_prediction_video(model, "data/videos/road-video-russia.mp4", True)
+
+    # print(f"images len: {len(images)}   preds len: {len(predictions)}")
+    # print(type(predictions[0][0][0]))
+
+    # print_labels_distribution_stats("data/yolov8-sizefull-val02-fmasks/labels/train", "config.yaml")
