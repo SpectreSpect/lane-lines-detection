@@ -36,6 +36,26 @@ default_palette = [
 ]
 
 
+class LaneMask():
+    def __init__(self, points: np.ndarray = [], label: int = []):
+        self.points = points
+        self.label = label
+            
+    
+    @staticmethod
+    def from_predictions(predictions, tolerance=0.0015) -> list:
+        lane_masks = []
+        if predictions.masks is not None:
+            for (xyn, cls) in zip(predictions.masks.xyn, predictions.boxes.cls):          
+                simplified_polygon = Polygon(xyn).simplify(tolerance, preserve_topology=True)
+                
+                points = np.array(simplified_polygon.exterior.coords)             
+                label = int(cls)
+
+                lane_mask = LaneMask(points, label)
+                lane_masks.append(lane_mask)
+        return lane_masks
+
 
 class LaneLine():
     def __init__(self, points: np.ndarray, label: int, elapsed_time=0, mask_count_points=0):

@@ -45,7 +45,7 @@ if __name__ == "__main__":
         print("Can't open the video.")
         cap.release()
 
-    video_segment_to_train_data(model, cap, video_segments[0], "test/images", "test/labels")
+    video_segment_to_train_data(model, cap, video_segments[0], "test/images", "test/labels", output_video_path="test_video.mp4")
 
 
 

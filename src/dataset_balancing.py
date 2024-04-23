@@ -268,13 +268,19 @@ def save_prediction(prediction, video_segment, output_path, tolerance=0.0015):
 
 
 def video_segment_to_train_data(model: LaneLineModel, cap, video_segment: VideoSegment, 
-                                ouput_images_path: str, output_labels_path: str):
+                                ouput_images_path: str, output_labels_path: str, output_video_path: str = None):
     frame_rate = int(cap.get(cv2.CAP_PROP_FPS))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     
     start_frame = video_segment.start_time * frame_rate
     end_frame = video_segment.end_time * frame_rate
 
     cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+
+    if output_video_path != None:
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(output_video_path, fourcc, frame_rate, (width, height))
 
     for _ in range(end_frame - start_frame):
         ret, image = cap.read()
@@ -290,6 +296,19 @@ def video_segment_to_train_data(model: LaneLineModel, cap, video_segment: VideoS
 
         prediction = model.model.predict([image], verbose=False)[0]
         save_prediction(prediction, video_segment, labels_path, 0.0015)
+
+        if output_video_path != None:
+            batch_lines = model.get_lines([prediction])
+            draw_segmentation([image], [prediction])
+            draw_lines([image], batch_lines)
+            out.write(image)
+    if output_video_path != None:
+        out.release()
+
+
+
+
+
 
 
 # def video_to_train_data(model: LaneLineModel, video_path: str, video_segments_path: str, ouput_images_path: str, output_labels_path: str, tolerance=0.0015):
