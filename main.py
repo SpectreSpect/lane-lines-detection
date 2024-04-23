@@ -46,10 +46,11 @@ if __name__ == "__main__":
 # # 
 
     # cap = cv2.VideoCapture("road-video-russia-PLOTTED.mp4")
-    # cap = cv2.VideoCapture("data/videos/road-video-russia.mp4")
-    # if not cap.isOpened():
-    #     print("Can't open the video.")
-    #     cap.release()
+
+    cap = cv2.VideoCapture("data/example.mp4")
+    if not cap.isOpened():
+        print("Can't open the video.")
+        cap.release()
 
     # video_segment_to_train_data(model, cap, video_segments[0], "test/images", "test/labels", output_video_path="test_video.mp4")
 
