@@ -37,24 +37,42 @@ default_palette = [
 
 
 class LaneMask():
-    def __init__(self, points: np.ndarray = [], label: int = []):
+    def __init__(self, points: np.ndarray = [], points_n: np.ndarray = [], label: int = [], orig_shape: np.ndarray = None):
         self.points = points
         self.label = label
+        self.orig_shape = orig_shape
+        self.points_n = points_n
             
     
     @staticmethod
-    def from_predictions(predictions, tolerance=0.0015) -> list:
-        lane_masks = []
-        if predictions.masks is not None:
-            for (xyn, cls) in zip(predictions.masks.xyn, predictions.boxes.cls):          
-                simplified_polygon = Polygon(xyn).simplify(tolerance, preserve_topology=True)
-                
-                points = np.array(simplified_polygon.exterior.coords)             
-                label = int(cls)
+    def from_predictions(predictions, tolerance=0) -> list:
+        mask_batches = []
+        for prediction in predictions:
+            lane_masks = []
+            if prediction.masks is not None:
+                for (xy, xyn, cls) in zip(prediction.masks.xy, prediction.masks.xyn, prediction.boxes.cls):
+                    if tolerance > 0:
+                        simplified_polygon = Polygon(xyn).simplify(tolerance, preserve_topology=True)
+                        points_n = np.array(simplified_polygon.exterior.coords)
+                    else:
+                        points_n = xyn
+                    label = int(cls)
 
-                lane_mask = LaneMask(points, label)
-                lane_masks.append(lane_mask)
-        return lane_masks
+                    lane_mask = LaneMask(xy, points_n, label, prediction.masks.orig_shape)
+                    lane_masks.append(lane_mask)
+            mask_batches.append(lane_masks)
+        return mask_batches
+    
+
+    def substitute_label(self, substitutions: list):
+        if str(self.label) in substitutions:
+            self.label = int(substitutions[str(self.label)])
+    
+
+    @staticmethod
+    def substitute_labels(masks, substitutions: list):
+        for mask in masks:
+            mask.substitute_label(substitutions)
 
 
 class LaneLine():
@@ -66,17 +84,17 @@ class LaneLine():
 
 
 
-def draw_segmentation_(image, predict, alpha=0.4, palette=default_palette):
-    if predict.masks is None:
+def draw_segmentation_(image, masks, alpha=0.4, palette=default_palette):
+    if not masks:
         return []
 
     mask_image = np.zeros(image.shape[:-1], dtype=np.uint8)
-    for idx, xy in enumerate(predict.masks.xy):
-        if xy.shape[0] == 0:
+    for mask in masks:
+        if mask.points.shape[0] == 0:
             break
-        color = palette[int(predict.boxes.cls[idx]) % len(palette)]
+        color = palette[int(mask.label) % len(palette)]
         color = (color[2], color[1], color[0])
-        cv2.drawContours(mask_image, [np.expand_dims(xy, 1).astype(int)], contourIdx=-1, color=(255), thickness=-1)
+        cv2.drawContours(mask_image, [np.expand_dims(mask.points, 1).astype(int)], contourIdx=-1, color=(255), thickness=-1)
         
         indices = mask_image != 0 
         image[indices] = image[indices] * (1 - alpha) + np.array(color) * alpha
@@ -85,9 +103,9 @@ def draw_segmentation_(image, predict, alpha=0.4, palette=default_palette):
     return image
 
 
-def draw_segmentation(images, predictions, alpha=0.2, palette=default_palette):
-    for (image, predict) in zip(images, predictions):
-        draw_segmentation_(image, predict, alpha, palette)
+def draw_segmentation(images, mask_batches, alpha=0.2, palette=default_palette):
+    for (image, masks) in zip(images, mask_batches):
+        draw_segmentation_(image, masks, alpha, palette)
     
     if len(images) == 1:
         return images[0]
@@ -183,6 +201,8 @@ def view_prediction_video(model, src, save_predictions=False, verbose=0):
         # Обработка изображения
         start = timer()
         predictions = model.model.predict([image], verbose=False)
+        mask_batches = model.predict_masks([image])
+        batch_lines = model.get_lines(mask_batches)
         end = timer()
 
         if save_predictions:
@@ -200,8 +220,6 @@ def view_prediction_video(model, src, save_predictions=False, verbose=0):
             print(f"frame: {i + 1}     elapsed time: {round(elapsed_time * 1000.0, 2)} ms")
             print(f"hertz: {round(hertz, 2)}     mean hertz: {round(mean_hertz / float(i + 1), 2)}    mean elapsed time: {round(mean_elapsed_time / float(i + 1), 2)} ms")
             print()
-
-        batch_lines = model.get_lines(predictions)
 
         for masks in batch_lines:
             for line in masks:
@@ -226,8 +244,7 @@ def view_prediction_video(model, src, save_predictions=False, verbose=0):
 
             mean_elapsed_time = 0
 
-        draw_segmentation([image], predictions)
-        #draw_lines([image], batch_lines)
+        draw_segmentation([image], mask_batches)
         draw_lines([image], batch_lines)
         cv2.imshow('prediction video', image)
 
@@ -241,23 +258,22 @@ def view_prediction_video(model, src, save_predictions=False, verbose=0):
     return ret_images, ret_predictions
 
 
-def get_straight_lines(results):
+def get_straight_lines(mask_batches):
     batch_lines = []
-    for result in results:
-        masks = result.masks
-        if masks is None:
+    for masks in mask_batches:
+        if not masks:
             batch_lines.append([])
             continue
 
-        mask_image = np.zeros(masks.orig_shape + (1,), dtype=np.uint8)
+        mask_image = np.zeros(masks[0].orig_shape + (1,), dtype=np.uint8)
         
         mask_lines = []
-        for xy, cls in zip(masks.xy, result.boxes.cls):
-            if xy.shape[0] == 0:
+        for mask in masks:
+            if mask.points.shape[0] == 0:
                 break
 
             t1 = time.time()
-            cv2.drawContours(mask_image, [np.expand_dims(xy, 1).astype(np.int32)], contourIdx=-1, color=(255), thickness=-1)
+            cv2.drawContours(mask_image, [np.expand_dims(mask.points, 1).astype(np.int32)], contourIdx=-1, color=(255), thickness=-1)
             lines = cv2.HoughLinesP(mask_image, 1, np.pi / 180, threshold=100, minLineLength=25, maxLineGap=30)
         
             if lines is not None:
@@ -272,7 +288,7 @@ def get_straight_lines(results):
                         best_line = line
 
                 t2 = time.time()
-                mask_lines.append(LaneLine(np.reshape(np.array(list(best_line), dtype=np.int32), (2, 2)), int(cls), t2-t1, int(xy.shape[0])))
+                mask_lines.append(LaneLine(np.reshape(np.array(list(best_line), dtype=np.int32), (2, 2)), int(mask.label), t2-t1, int(mask.points.shape[0])))
             
             mask_image[:] = 0
         batch_lines.append(mask_lines)
@@ -320,23 +336,22 @@ def correct_point(xy, const_point_id, moving_point_id, max_distance, dist_accum_
 
 
 def get_line_contour(
-        predict, 
+        masks, 
         max_distance=100, 
         min_id_dis_ratio=0.5, 
         edge_point_dis=20, 
         dist_accum_factor=0.8, 
         n_accum=5, 
         tolerance=0.0001) -> list:
-    masks = predict.masks
-    if masks is None:
+    if not masks:
         return []
     
     mask_lines = []
-    for xyn, cls in zip(masks.xyn, predict.boxes.cls):
+    for mask in masks:
         t1 = time.time()
-        simplified_polygon = Polygon(xyn).simplify(tolerance, preserve_topology=True)
+        simplified_polygon = Polygon(mask.points_n).simplify(tolerance, preserve_topology=True)
         points = np.array(simplified_polygon.exterior.coords)
-        points *= np.array([masks.orig_shape[1], masks.orig_shape[0]])
+        points *= np.array([mask.orig_shape[1], mask.orig_shape[0]])
         
         if points.shape[0] == 0:
             break
@@ -447,15 +462,15 @@ def get_line_contour(
                         line = [(points[moving_point1_id] + points[moving_point2_id]) / 2] + line
         
         t2 = time.time()
-        mask_lines.append(LaneLine(np.array(line, dtype=np.int32), int(cls), t2-t1, len(line)))
+        mask_lines.append(LaneLine(np.array(line, dtype=np.int32), mask.label, t2-t1, len(line)))
 
     return mask_lines
         
 
-def get_lines_contours(predicts, max_distance=100, min_id_dis_ratio=0.5, edge_point_dis=20, dist_accum_factor=0.99, n_accum=10):
+def get_lines_contours(mask_batches, max_distance=100, min_id_dis_ratio=0.5, edge_point_dis=20, dist_accum_factor=0.99, n_accum=10, subtitutions: list = None):
     lines = []
-    for predict in predicts:
-        lines.append(get_line_contour(predict, max_distance, min_id_dis_ratio, edge_point_dis, dist_accum_factor, n_accum))
+    for masks in mask_batches:
+        lines.append(get_line_contour(masks, max_distance, min_id_dis_ratio, edge_point_dis, dist_accum_factor, n_accum))
     return lines
 
 

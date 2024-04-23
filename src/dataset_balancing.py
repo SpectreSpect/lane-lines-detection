@@ -267,6 +267,27 @@ def save_prediction(prediction, video_segment, output_path, tolerance=0.0015):
             file.write(file_string)
 
 
+def save_prediction_2(lane_masks: list, output_path: str, tolerance: float = 0.0015):
+    file_string = ""
+    if lane_masks is not None:
+        for idy, lane_mask in enumerate(lane_masks):
+            
+            simplified_polygon = Polygon(lane_mask.points).simplify(tolerance, preserve_topology=True)
+            points = np.array(simplified_polygon.exterior.coords)
+            
+            file_string += str(lane_mask.label) + " "
+            for idx, point in enumerate(points):
+                file_string += str(float(point[0])) + " " + str(float(point[1]))
+                if idy < len(points) - 1:
+                    if idx < len(points) - 1:
+                        file_string += " "
+                    else:
+                        file_string += "\n"
+    
+    with open(output_path, "w") as file:
+            file.write(file_string)
+
+
 def video_segment_to_train_data(model: LaneLineModel, cap, video_segment: VideoSegment, 
                                 ouput_images_path: str, output_labels_path: str, output_video_path: str = None):
     frame_rate = int(cap.get(cv2.CAP_PROP_FPS))
@@ -295,11 +316,16 @@ def video_segment_to_train_data(model: LaneLineModel, cap, video_segment: VideoS
         cv2.imwrite(image_path, image)
 
         prediction = model.model.predict([image], verbose=False)[0]
-        save_prediction(prediction, video_segment, labels_path, 0.0015)
+
+        mask_batches = LaneMask.from_predictions(prediction, tolerance=0.0015)
+        LaneMask.substitute_labels(mask_batches[0], video_segment.substitutions)
+
+        # save_prediction(prediction, video_segment, labels_path, 0.0015)
+        save_prediction_2(mask_batches[0], labels_path, 0.0015)
 
         if output_video_path != None:
-            batch_lines = model.get_lines([prediction])
-            draw_segmentation([image], [prediction])
+            batch_lines = model.get_lines([mask_batches[0]])
+            draw_segmentation([image], [mask_batches[0]])
             draw_lines([image], batch_lines)
             out.write(image)
     if output_video_path != None:
