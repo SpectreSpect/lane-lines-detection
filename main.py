@@ -39,9 +39,9 @@ if __name__ == "__main__":
     image2 = load_image("data/yolov8_medium-1000_2/images/train/150776258831391200.jpg")
     image3 = load_image("data/yolov8_medium-1000_2/images/train/155320868381244300.jpg")
     image4 = load_image("data/yolov8_medium-1000_2/images/train/155320867831365400.jpg")
-
+    
     images = [image1, image2, image3, image4]
-
+    
     #lane_model.visualize_prediction(images)
 
     # view_prediction_video(lane_model, "data/example.mp4") #1
