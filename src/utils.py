@@ -3,20 +3,58 @@ import math
 import cv2
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString, Polygon
+from timeit import default_timer as timer
 import time
+import os
 
-
+# default_palette = [
+#     (255, 0, 0),
+#     (0, 255, 0),
+#     (0, 0, 255),
+#     (0, 255, 255), 
+#     (255, 0, 255), 
+#     (255, 255, 0), 
+#     (150, 255, 255)
+# ]
 
 default_palette = [
-    (255, 0, 0),
-    (0, 255, 0),
-    (0, 0, 255),
-    (0, 255, 255), 
-    (255, 0, 255), 
-    (255, 255, 0), 
-    (150, 255, 255)
+    (0, 0, 0), # unkown
+    (85, 172, 238), # white-dash
+    (120, 177, 89), # white-solid
+    (0, 0, 0), # double-white-dash
+    (0, 0, 0), # double-white-solid
+    (0, 0, 0), # white-ldash-rsolid
+    (0, 0, 0), # white-lsolid-rdash
+    (0, 0, 0), # yellow-dash
+    (253, 203, 88), # yellow-solid
+    (0, 0, 0), # double-yellow-dash
+    (244, 144, 12), # double-yellow-solid
+    (221, 46, 68), # yellow-ldash-rsolid
+    (0, 0, 0), # yellow-lsolid-rdash
+    (0, 0, 0), # left-curbside
+    (0, 0, 0), # right-curbside
 ]
 
+
+class LaneMask():
+    def __init__(self, points: np.ndarray = [], label: int = []):
+        self.points = points
+        self.label = label
+            
+    
+    @staticmethod
+    def from_predictions(predictions, tolerance=0.0015) -> list:
+        lane_masks = []
+        if predictions.masks is not None:
+            for (xyn, cls) in zip(predictions.masks.xyn, predictions.boxes.cls):          
+                simplified_polygon = Polygon(xyn).simplify(tolerance, preserve_topology=True)
+                
+                points = np.array(simplified_polygon.exterior.coords)             
+                label = int(cls)
+
+                lane_mask = LaneMask(points, label)
+                lane_masks.append(lane_mask)
+        return lane_masks
 
 
 class LaneLine():
@@ -37,6 +75,7 @@ def draw_segmentation_(image, predict, alpha=0.4, palette=default_palette):
         if xy.shape[0] == 0:
             break
         color = palette[int(predict.boxes.cls[idx]) % len(palette)]
+        color = (color[2], color[1], color[0])
         cv2.drawContours(mask_image, [np.expand_dims(xy, 1).astype(int)], contourIdx=-1, color=(255), thickness=-1)
         
         indices = mask_image != 0 
@@ -60,6 +99,7 @@ def draw_lines(images, batch_curves, palette=default_palette, thickness=4):
     for (image, mask_curves) in zip(images, batch_curves):
         for idx, lane_line in enumerate(mask_curves):
             color = palette[lane_line.label % len(palette)]
+            color = (color[2], color[1], color[0])
             for id in range(1, len(lane_line.points)):
                 cv2.line(image, lane_line.points[id - 1], lane_line.points[id], color, thickness=thickness)
 
@@ -102,33 +142,64 @@ def get_mean_elapsed_time(batch_lines: list):
 
     return mean_elapsed_time / count
 
+def paint_str(string: str, color):
+    start = "\033[38;2;{};{};{}m"
+    end = "\033[0m"
+    text = start + string + end
+    return text.format(color[0], color[1], color[2])
+    # print(text.format(color[0], color[1], color[2]))
 
-def view_prediction_video(model, src):
+
+def view_prediction_video(model, src, save_predictions=False, verbose=0):
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
         print("Не удалось открыть файл.")
         cap.release()
         return
     
+
+    mean_hertz = 0
+    mean_elapsed_time = 0
     i = 0
-    
+
     count_tests = 500
     mean_elapsed_time = 0
 
     max_count_points = 5000
     measurements = np.zeros((max_count_points,), dtype=np.float32)
     hits = np.zeros((max_count_points,), dtype=np.int32)
+    
+    ret_images = []
+    ret_predictions = []
 
     while cap.isOpened():
         ret, image = cap.read()
         if not ret:
             break
         
-        print(f"id: {i}")
+        if verbose != 0:
+            print(f"id: {i}")
 
         # Обработка изображения
-
+        start = timer()
         predictions = model.model.predict([image], verbose=False)
+        end = timer()
+
+        if save_predictions:
+            ret_images.append(image.copy())
+            # cv2.imwrite(os.path.join("test", "sdfsdfsdf" + ".jpg"), ret_images[0])
+            ret_predictions.append(predictions[0])
+
+        elapsed_time = end - start
+        hertz = 1.0 / elapsed_time
+        
+        mean_hertz += hertz 
+        mean_elapsed_time += elapsed_time * 1000.0 # ms
+
+        if verbose != 0:
+            print(f"frame: {i + 1}     elapsed time: {round(elapsed_time * 1000.0, 2)} ms")
+            print(f"hertz: {round(hertz, 2)}     mean hertz: {round(mean_hertz / float(i + 1), 2)}    mean elapsed time: {round(mean_elapsed_time / float(i + 1), 2)} ms")
+            print()
 
         batch_lines = model.get_lines(predictions)
 
@@ -141,7 +212,8 @@ def view_prediction_video(model, src):
 
 
         if i > 0 and i % count_tests == 0:
-            print(f"Test {i // count_tests}. Elapsed time = {mean_elapsed_time / count_tests * 1000}")
+            if verbose != 0:
+                print(f"Test {i // count_tests}. Elapsed time = {mean_elapsed_time / count_tests * 1000}")
 
             # measurements /= hits
             # x = np.linspace(0, max_count_points, max_count_points)
@@ -166,6 +238,7 @@ def view_prediction_video(model, src):
         i += 1
     
     cap.release()
+    return ret_images, ret_predictions
 
 
 def get_straight_lines(results):
@@ -384,3 +457,23 @@ def get_lines_contours(predicts, max_distance=100, min_id_dis_ratio=0.5, edge_po
     for predict in predicts:
         lines.append(get_line_contour(predict, max_distance, min_id_dis_ratio, edge_point_dis, dist_accum_factor, n_accum))
     return lines
+
+
+def str_to_seconds(string: str):
+    splits = string.split(':')
+    
+    seconds = 0
+    minutes = 0
+    hours = 0
+    if len(splits) == 1:
+        seconds = int(splits[0])
+    elif len(splits) == 2:
+        minutes = int(splits[0])
+        seconds = int(splits[1])
+    elif len(splits) == 3:
+        hours = int(splits[0])
+        minutes = int(splits[1])
+        seconds = int(splits[2])
+    
+    output = seconds + minutes * 60 + hours * 60 * 60
+    return output

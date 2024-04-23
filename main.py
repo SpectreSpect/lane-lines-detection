@@ -6,7 +6,8 @@ import os
 import matplotlib.pyplot as plt
 import math
 from src.utils import *
-import torch
+from src.dataset_balancing import *
+import re
 
 
 def load_image(path: str):
@@ -32,19 +33,44 @@ def load_images(path: str, max_images_count=-1) -> list:
 
 
 if __name__ == "__main__":
-    lane_model = LaneLineModel("models/sizefull-ep20/model.pt", use_curve_line=True)
-    # lane_model.train("data/yolov8-size1000-val02-fmasks", 2, output_directory="runs")
+    model = LaneLineModel("models/sizefull-ep20/model.pt")
 
-    image1 = load_image("data/yolov8_medium-1000_2/images/train/155727749493776200.jpg")
-    image2 = load_image("data/yolov8_medium-1000_2/images/train/150776258831391200.jpg")
-    image3 = load_image("data/yolov8_medium-1000_2/images/train/155320868381244300.jpg")
-    image4 = load_image("data/yolov8_medium-1000_2/images/train/155320867831365400.jpg")
-    
-    images = [image1, image2, image3, image4]
-    
-    #lane_model.visualize_prediction(images)
+    # video_segments = read_video_segments("video-segments.txt")
+    video_segments = read_video_segments("video-segments.txt")
+# 
 
-    # view_prediction_video(lane_model, "data/example.mp4") #1
-    view_prediction_video(lane_model, "data/road-video-forest.mp4") #2
-    # view_prediction_video(lane_model, "data/road-video.mp4") #3
-    
+    # cap = cv2.VideoCapture("road-video-russia-PLOTTED.mp4")
+    cap = cv2.VideoCapture("data/example.mp4")
+    if not cap.isOpened():
+        print("Can't open the video.")
+        cap.release()
+
+    video_segment_to_train_data(model, cap, video_segments[0], "test/images", "test/labels", output_video_path="test_video.mp4")
+
+
+
+    # video_segments = read_video_segments("video-segments.txt")
+    # for video_segment in video_segments:
+    #     print(f"{video_segment.start_time}s {video_segment.end_time}s {video_segment.substitutions}")
+
+
+    # model = LaneLineModel("models/sizefull-ep20/model.pt")
+
+    # save_plotted_video(model, "data/videos/road-video-russia.mp4", "road-video-russia-PLOTTED.mp4")
+
+    # (1:20, 1:30, [(5, 2), (6, 7), (9, 11)])
+
+    # "20" = 20 sec
+    # "1:20" = 1 minute 20 seconds
+    # "3:01:20" = 3 hours 1 minute 20 seconds
+
+    # preview_prediction_video(model, "data/videos/road-video-russia.mp4", "config.yaml")
+
+
+
+    # images, predictions = view_prediction_video(model, "data/videos/road-video-russia.mp4", True)
+
+    # print(f"images len: {len(images)}   preds len: {len(predictions)}")
+    # print(type(predictions[0][0][0]))
+
+    # print_labels_distribution_stats("data/yolov8-sizefull-val02-fmasks/labels/train", "config.yaml")
