@@ -122,6 +122,48 @@ def draw_lines(images, batch_curves, palette=default_palette, thickness=4):
                 cv2.line(image, lane_line.points[id - 1], lane_line.points[id], color, thickness=thickness)
 
 
+def draw_labels(
+        images, 
+        mask_batches,
+        label_names, 
+        margin=5, 
+        padding=5,
+        font_scale=0.8,
+        thickness=2, 
+        alpha=0.7,
+        alpha_font=0.4):
+    widget_position = np.array([margin, margin])
+
+    unactive_color = tuple((np.array([255, 255, 255], dtype=np.uint8) * alpha_font).tolist())
+    for image, masks in zip(images, mask_batches):
+        #alpha_mask = np.zeros(image.shape[:2] + (1,))
+        name_data = []
+        mask_image = np.zeros_like(image)
+        for idx, name in enumerate(label_names):
+            text = f"{idx}: {name}"
+            text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness=thickness)[0]
+            element_size = text_size + np.array([padding, padding]) * 2
+
+            mask_position = widget_position + np.array([0, (element_size[1] + margin) * idx])
+            text_position = mask_position + np.array([padding, padding])
+            
+            name_data.append({"text": text, "text_size": text_size, "element_size": element_size, "mask_position": mask_position, "text_position": text_position})
+            cv2.rectangle(mask_image, mask_position, mask_position + element_size, (1, 1, 1), -1)
+        
+        indices = mask_image != np.array([0, 0, 0], dtype=np.uint8)
+        image[indices] = mask_image[indices] * alpha + image[indices] * (1 - alpha)
+
+        labels = [mask.label for mask in masks]
+
+        for idx, data in enumerate(name_data):
+            color = unactive_color
+            if idx in labels:
+                color = default_palette[idx]
+            
+            color = (color[2], color[1], color[0])
+            cv2.putText(image, data['text'], data['text_position'] + np.array([0, data['text_size'][1]]), cv2.FONT_HERSHEY_SIMPLEX, fontScale=font_scale, color=color, thickness=thickness)
+    return images
+
 def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2):
     columns = min(len(images), columns)
     count_images_for_ineration = min(len(images), count_images_for_ineration)
@@ -168,13 +210,12 @@ def paint_str(string: str, color):
     # print(text.format(color[0], color[1], color[2]))
 
 
-def view_prediction_video(model, src, save_predictions=False, verbose=0):
+def view_prediction_video(model, src, label_names=[], save_predictions=False, verbose=0):
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
         print("Не удалось открыть файл.")
         cap.release()
         return
-    
 
     mean_hertz = 0
     mean_elapsed_time = 0
@@ -246,6 +287,8 @@ def view_prediction_video(model, src, save_predictions=False, verbose=0):
 
         draw_segmentation([image], mask_batches)
         draw_lines([image], batch_lines)
+        draw_labels([image], mask_batches, label_names)
+
         cv2.imshow('prediction video', image)
 
         key_code = cv2.waitKey(5) & 0xFF
@@ -434,7 +477,7 @@ def get_line_contour(
             
             i += 1
         if count_pass >= min_id_dis:
-            mask_lines.append(LaneLine(np.array([], dtype=np.int32), int(cls)))
+            mask_lines.append(LaneLine(np.array([], dtype=np.int32), int(mask.label)))
             break
             
         start_point2_id = correct_point(points,start_point1_id, start_point2_id, max_distance, dist_accum_factor, n_accum)

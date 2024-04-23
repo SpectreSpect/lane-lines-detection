@@ -35,10 +35,10 @@ def load_images(path: str, max_images_count=-1) -> list:
 if __name__ == "__main__":
     model = LaneLineModel("models/sizefull-ep20/model.pt")
 
-
     # video_segments = read_video_segments("video-segments.txt")
 
-    # view_prediction_video(model, "data/videos/road-video-russia.mp4")
+    view_prediction_video(model, "data/road-video.mp4", get_label_names("config.yaml"))
+    
 
     ############################################################################################################################################
 
@@ -47,10 +47,10 @@ if __name__ == "__main__":
 
     # cap = cv2.VideoCapture("road-video-russia-PLOTTED.mp4")
 
-    cap = cv2.VideoCapture("data/example.mp4")
-    if not cap.isOpened():
-        print("Can't open the video.")
-        cap.release()
+    # cap = cv2.VideoCapture("data/example.mp4")
+    # if not cap.isOpened():
+    #     print("Can't open the video.")
+    #     cap.release()
 
     # video_segment_to_train_data(model, cap, video_segments[0], "test/images", "test/labels", output_video_path="test_video.mp4")
 
