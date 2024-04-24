@@ -33,56 +33,42 @@ def load_images(path: str, max_images_count=-1) -> list:
 
 
 if __name__ == "__main__":
-    # model = LaneLineModel("models/sizefull-ep20/model.pt")   
-    # # masks = LaneMask.from_file("test/labels/f7fdc14f-af4d-4daa-b358-a2f091c98120.txt", image_path="test/images/f7fdc14f-af4d-4daa-b358-a2f091c98120.jpg")
-    # masks = LaneMask.from_file("data/yolov8-size1000-val02-fmasks/labels/train/150897399236705800.txt", 
-    #                            image_path="data/yolov8-size1000-val02-fmasks/images/train/150897399236705800.jpg")
-    
-    # image = cv2.imread("data/yolov8-size1000-val02-fmasks/images/train/150897399236705800.jpg")
-    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    # mask_batches = model.predict_masks([image])
-    # plot_image = LaneMask.generate_plot(masks, image_path="data/yolov8-size1000-val02-fmasks/images/train/150897399236705800.jpg")
-    # show_images([plot_image])
-
-# test\images\a51de2f9-8951-42ef-8637-71f07bcef62f.jpg
-
-    # LaneMask.visualize_masks(masks_path="data/yolov8-size1000-val02-fmasks/labels/train/150912151242604600.txt",
-    #                          image_path="data/yolov8-size1000-val02-fmasks/images/train/150912151242604600.jpg",
-    #                          mask_alpha=0.7,
-    #                          draw_lines=False)
-
-    LaneMask.visualize_masks(masks_path="test/labels/e8326e0a-4336-432f-b20b-3bcdae696455.txt",
-                             image_path="test/images/e8326e0a-4336-432f-b20b-3bcdae696455.jpg",
-                             mask_alpha=0.7,
-                             draw_lines=False)
-    exit()
-    
-
-    # save_plotted_video(model, "data/videos/road-video-russia.mp4", 
-    #                    "lets_look_at_what_it_looks_like.mp4", 
-    #                    label_names=get_label_names("config.yaml"))
-
-    # video_segments = read_video_segments("video-segments.txt")
-
-    view_prediction_video(model, "data/videos/road-video-russia.mp4", get_label_names("config.yaml"))
+    model = LaneLineModel("models/sizefull-ep20/model.pt")   
+    # view_prediction_video(model, "data/videos/road-video-russia.mp4", get_label_names("config.yaml"))
     
 
     ############################################################################################################################################
 
-    video_segments = read_video_segments("video-segments.txt")
+    # video_segments = read_video_segments("video-segments.txt")
     # cap = cv2.VideoCapture("road-video-russia-PLOTTED.mp4")
 
-    cap = cv2.VideoCapture("data/videos/road-video-russia.mp4")
-    if not cap.isOpened():
-        print("Can't open the video.")
-        cap.release()
+    # cap = cv2.VideoCapture("data/videos/road-video-russia.mp4")
+    # if not cap.isOpened():
+    #     print("Can't open the video.")
+    #     cap.release()
 
-    video_segment_to_train_data(model, cap, video_segments[0], 
-                                "test/images", 
-                                "test/labels", 
-                                label_names=get_label_names("config.yaml"),
-                                output_video_path="test_video.mp4")
+    # video_segment_to_train_data(model, cap, video_segments[0], 
+    #                             "test/images", 
+    #                             "test/labels", 
+    #                             label_names=get_label_names("config.yaml"),
+    #                             output_video_path="test_video.mp4")
+    
+
+
+
+    # video_segments_to_train_data(model, 
+    #                              "data/videos/road-video-russia.mp4", 
+    #                              video_segments, 
+    #                              "test/images",
+    #                              "test/labels",
+    #                              "tmp/test_videos",
+    #                              get_label_names("config.yaml"))
+    
+    videos_to_train_data(model, 
+                         "tmp/test_inputs_data/videos", 
+                         "tmp/test_inputs_data/segments", 
+                         "tmp/test_storage3",
+                         get_label_names("config.yaml"))
 
     ###############################################################################################################################################
     # video_segment_to_train_data(model, cap, video_segments[0], "test/images", "test/labels")

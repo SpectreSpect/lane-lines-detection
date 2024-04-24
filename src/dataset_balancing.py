@@ -347,9 +347,64 @@ def video_segment_to_train_data(model: LaneLineModel, cap, video_segment: VideoS
         out.release()
 
 
+def video_segments_to_train_data(model: LaneLineModel, video_path: str, video_segments: VideoSegment, 
+                                ouput_images_path: str, output_labels_path: str, output_videos_path: str = None, 
+                                label_names: list = [], verbose=0):
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        print("Can't open the video.")
+        cap.release()
+
+    input_video_name = os.path.basename(video_path).split(".")[0]
+
+    for idx, video_segment in enumerate(video_segments):
+        if verbose == 3:
+            print(f"    Segments loaded: {idx+1}")
+        output_video_name = input_video_name + "_" + str(idx)
+        output_video_path = os.path.join(output_videos_path, output_video_name + ".mp4")
+        video_segment_to_train_data(model, cap, video_segment, ouput_images_path, 
+                                    output_labels_path, output_video_path, 
+                                    label_names)
 
 
+def videos_to_train_data(model: LaneLineModel, videos_path: str, video_segments_path: str, output_path: str,
+                         label_names: list = []):
+    video_paths = []
+    for filename in os.listdir(videos_path):
+        file_path = os.path.join(videos_path, filename)
+        if os.path.isfile(file_path):
+            video_paths.append(file_path)
+    
+    video_segment_paths = []
+    for filename in os.listdir(video_segments_path):
+        file_path = os.path.join(video_segments_path, filename)
+        if os.path.isfile(file_path):
+            video_segment_paths.append(file_path)
+    
+    for idx, (video_path, video_segment_path) in enumerate(zip(video_paths, video_segment_paths)):
+        video_basename = os.path.basename(video_path)
+        video_name = os.path.splitext(video_basename)[0]
+        
+        segment_output_path = os.path.join(output_path, video_name)
 
+        output_images_path = os.path.join(segment_output_path, "images")
+        output_labels_path = os.path.join(segment_output_path, "labels")
+        output_videos_path = os.path.join(segment_output_path, "videos")
+
+        os.makedirs(output_images_path, exist_ok=True)
+        os.makedirs(output_labels_path, exist_ok=True)
+        os.makedirs(output_videos_path, exist_ok=True)
+
+        print(f"{idx}: {video_name}")
+
+        video_segments = read_video_segments(video_segment_path)
+        video_segments_to_train_data(model, 
+                                    video_path, 
+                                    video_segments, 
+                                    output_images_path,
+                                    output_labels_path,
+                                    output_videos_path,
+                                    label_names, verbose=3)
 
 
 # def video_to_train_data(model: LaneLineModel, video_path: str, video_segments_path: str, ouput_images_path: str, output_labels_path: str, tolerance=0.0015):
