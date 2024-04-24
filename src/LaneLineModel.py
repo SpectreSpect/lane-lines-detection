@@ -66,7 +66,9 @@ class LaneLineModel:
 
         return images_to_draw
     
+
     def visualize_prediction(self, images, yolo_vis=False):
         plot_images = self.generate_prediction_plots_yolo(images) if yolo_vis else self.generate_prediction_plots(images)
         show_images(plot_images)
         return plot_images
+        

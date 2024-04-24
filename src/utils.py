@@ -6,6 +6,7 @@ from shapely.geometry import LineString, Polygon
 from timeit import default_timer as timer
 import time
 import os
+import re
 
 # default_palette = [
 #     (255, 0, 0),
@@ -22,7 +23,7 @@ default_palette = [
     (85, 172, 238), # white-dash
     (120, 177, 89), # white-solid
     (0, 0, 0), # double-white-dash
-    (0, 0, 0), # double-white-solid
+    (221, 46, 68), # double-white-solid
     (0, 0, 0), # white-ldash-rsolid
     (0, 0, 0), # white-lsolid-rdash
     (0, 0, 0), # yellow-dash
@@ -42,8 +43,8 @@ class LaneMask():
         self.label = label
         self.orig_shape = orig_shape
         self.points_n = points_n
-            
-    
+
+
     @staticmethod
     def from_predictions(predictions, tolerance=0) -> list:
         mask_batches = []
@@ -64,6 +65,45 @@ class LaneMask():
         return mask_batches
     
 
+    def from_file(file_path: str, orig_shape = None, image: np.ndarray = None, image_path: str = None) -> list:
+        masks = []
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+            for line in lines:
+                # values = re.findall(r'\d+', line)
+                values = re.findall(r"[-+]?(?:\d*\.*\d+)", line)
+                label = int(values[0])
+                points_n = []
+
+                for idx in range(1, len(values[1:]), 2):
+                    point = [float(values[idx]), float(values[idx + 1])]
+                    points_n.append(point)
+                points_n = np.array(points_n)
+
+                shape = None
+                if orig_shape is not None:
+                    shape = orig_shape
+                elif image is not None:
+                    shape = (image.shape[0], image.shape[1])
+                elif image_path is not None:
+                    new_image = cv2.imread(image_path)
+                    shape = (new_image.shape[0], new_image.shape[1])
+                
+                points = None
+                if shape is not None:
+                    points = points_n.copy()
+                    # points = points_n
+                    # points[:, 0] *= shape[0]
+                    # points[:, 1] *= shape[1]
+                    points[:, 0] *= shape[1]
+                    points[:, 1] *= shape[0]
+                # points = np.array(points, dtype=int)
+
+                lane_mask = LaneMask(points, points_n, label, shape)
+                masks.append(lane_mask)
+        return masks
+    
+
     def substitute_label(self, substitutions: list):
         if str(self.label) in substitutions:
             self.label = int(substitutions[str(self.label)])
@@ -73,6 +113,41 @@ class LaneMask():
     def substitute_labels(masks, substitutions: list):
         for mask in masks:
             mask.substitute_label(substitutions)
+    
+
+    @staticmethod
+    def generate_plot(masks, image=None, image_path=None, mask_alpha=0.2, draw_lines=True):
+        # image_to_draw = np.copy(image)
+        # batch_lines = get_lines([masks])
+        # draw_segmentation(image_to_draw, [masks])
+        # draw_lines(image_to_draw, batch_lines)
+        if image is None:
+            image = cv2.imread(image_path)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        mask_batches = [masks]
+        batch_lines = get_lines(mask_batches)
+
+        images_to_draw = np.copy([image])
+        draw_segmentation(images_to_draw, mask_batches, mask_alpha)
+        if draw_lines:
+            draw_lines(images_to_draw, batch_lines)
+
+        return images_to_draw[0]
+    
+
+    @staticmethod
+    def visualize_masks(masks=None, image=None, masks_path: str = None, image_path: str = None, mask_alpha=0.2, draw_lines=True):
+        if image is None:
+            image = cv2.imread(image_path)
+
+        if masks is None:
+            masks = LaneMask.from_file(masks_path, image=image)
+
+        plot_image = LaneMask.generate_plot(masks, image=image, mask_alpha=mask_alpha, draw_lines=draw_lines)
+        plot_image = cv2.cvtColor(plot_image, cv2.COLOR_BGR2RGB)
+        
+        show_images([plot_image])
 
 
 class LaneLine():
@@ -82,6 +157,14 @@ class LaneLine():
         self.elapsed_time = elapsed_time
         self.mask_count_points=mask_count_points
 
+
+def get_lines(mask_batches, subtitutions: list = None):
+        # if self.use_curve_line:
+        #     batch_lines = get_lines_contours(mask_batches)
+        # else:
+        #     batch_lines = get_straight_lines(mask_batches)
+        batch_lines = get_lines_contours(mask_batches)
+        return batch_lines
 
 
 def draw_segmentation_(image, masks, alpha=0.4, palette=default_palette):

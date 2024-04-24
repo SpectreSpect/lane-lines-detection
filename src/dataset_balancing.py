@@ -155,7 +155,7 @@ def preview_prediction_video(model: LaneLineModel, video_path: str, config_path:
     save_predictions("test/images", "test/labels", images, predictions, label_names_dict_inversed, label_names_dict)
     
 
-def save_plotted_video(model: LaneLineModel, src_video_path: str, output_path: str):
+def save_plotted_video(model: LaneLineModel, src_video_path: str, output_path: str, label_names: list = []):
     cap = cv2.VideoCapture(src_video_path)
     if not cap.isOpened():
         print("Can't open the video.")
@@ -180,11 +180,17 @@ def save_plotted_video(model: LaneLineModel, src_video_path: str, output_path: s
         if frame >= 100:
             break
 
-        predictions = model.model.predict([image], verbose=False)
-        batch_lines = model.get_lines(predictions)
+        # predictions = model.model.predict([image], verbose=False)
+        mask_batches = model.predict_masks([image])
+        batch_lines = model.get_lines(mask_batches)
+        
 
-        draw_segmentation([image], predictions)
+        # mask_batches = LaneMask.from_predictions(predictions, tolerance=0)
+
+        draw_segmentation([image], mask_batches)
         draw_lines([image], batch_lines)
+        if (len(label_names) > 0):
+            draw_labels([image], mask_batches, label_names)
  
         out.write(image)
         frame += 1
@@ -272,7 +278,7 @@ def save_prediction_2(lane_masks: list, output_path: str, tolerance: float = 0.0
     if lane_masks is not None:
         for idy, lane_mask in enumerate(lane_masks):
             
-            simplified_polygon = Polygon(lane_mask.points).simplify(tolerance, preserve_topology=True)
+            simplified_polygon = Polygon(lane_mask.points_n).simplify(tolerance, preserve_topology=True)
             points = np.array(simplified_polygon.exterior.coords)
             
             file_string += str(lane_mask.label) + " "
@@ -289,7 +295,8 @@ def save_prediction_2(lane_masks: list, output_path: str, tolerance: float = 0.0
 
 
 def video_segment_to_train_data(model: LaneLineModel, cap, video_segment: VideoSegment, 
-                                ouput_images_path: str, output_labels_path: str, output_video_path: str = None):
+                                ouput_images_path: str, output_labels_path: str, output_video_path: str = None, 
+                                label_names: list = []):
     frame_rate = int(cap.get(cv2.CAP_PROP_FPS))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -315,18 +322,26 @@ def video_segment_to_train_data(model: LaneLineModel, cap, video_segment: VideoS
 
         cv2.imwrite(image_path, image)
 
-        prediction = model.model.predict([image], verbose=False)[0]
+        # prediction = model.model.predict([image], verbose=False)[0]
 
-        mask_batches = LaneMask.from_predictions(prediction, tolerance=0.0015)
-        LaneMask.substitute_labels(mask_batches[0], video_segment.substitutions)
+
+        # mask_batches = LaneMask.from_predictions(prediction, tolerance=0)
+        # LaneMask.substitute_labels(mask_batches[0], video_segment.substitutions)
 
         # save_prediction(prediction, video_segment, labels_path, 0.0015)
+
+        mask_batches = model.predict_masks([image])
+
+        for masks in mask_batches:
+            LaneMask.substitute_labels(masks, video_segment.substitutions)
         save_prediction_2(mask_batches[0], labels_path, 0.0015)
 
         if output_video_path != None:
-            batch_lines = model.get_lines([mask_batches[0]])
-            draw_segmentation([image], [mask_batches[0]])
+            batch_lines = model.get_lines(mask_batches)
+            draw_segmentation([image], mask_batches)
             draw_lines([image], batch_lines)
+            if len(label_names) > 0:
+                draw_labels([image], mask_batches, label_names)
             out.write(image)
     if output_video_path != None:
         out.release()
