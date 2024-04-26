@@ -64,12 +64,15 @@ if __name__ == "__main__":
     #                              "tmp/test_videos",
     #                              get_label_names("config.yaml"))
     
-    videos_to_train_data(model, 
-                         "tmp/test_inputs_data/videos", 
-                         "tmp/test_inputs_data/segments", 
-                         "tmp/test_storage3",
-                         get_label_names("config.yaml"),
-                         fps=5)
+    # videos_to_train_data(model, 
+    #                      "tmp/test_inputs_data/videos", 
+    #                      "tmp/test_inputs_data/segments", 
+    #                      "tmp/test_storage3",
+    #                      get_label_names("config.yaml"),
+    #                      fps=5)
+
+    save_video_into_frames("data/videos/videos_to_balancing/Recording 2024-04-26 160946.mp4",
+                           "tmp/test_images_path")
 
     # generate_plotted_videos(model, 
     #                         "data/videos/videos_to_balancing",

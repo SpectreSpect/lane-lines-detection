@@ -464,6 +464,30 @@ def generate_plotted_videos(model: LaneLineModel, src_videos_path: str, output_p
 #         save_prediction(prediction, video_segment, labels_path, 0.0015)
 
 
+def save_video_into_frames(path_to_video: str, output_path: str, render_filenames: list = [], scale_factor=1):
+    cap = cv2.VideoCapture(path_to_video)
+    
+    if not cap.isOpened():
+        print("Can't open the video.")
+        cap.release()
+        return
+    
+    frame = 0
+    while True:
+        ret, image = cap.read()
+
+        if not ret:
+            break
+        
+        if frame < len(render_filenames):
+            filename = render_filenames[frame]
+        else:
+            filename = str(uuid.uuid4())
+
+        image_path = os.path.join(output_path, filename + ".jpg")
+        cv2.imwrite(image_path, image)
+        
+        frame += 1
 
 
 

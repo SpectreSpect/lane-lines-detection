@@ -19,21 +19,21 @@ import re
 # ]
 
 default_palette = [
-    (0, 0, 0), # unkown
-    (85, 172, 238), # white-dash
-    (120, 177, 89), # white-solid
-    (0, 0, 0), # double-white-dash
-    (221, 46, 68), # double-white-solid
-    (0, 0, 0), # white-ldash-rsolid
-    (0, 0, 0), # white-lsolid-rdash
-    (0, 0, 0), # yellow-dash
-    (253, 203, 88), # yellow-solid
-    (0, 0, 0), # double-yellow-dash
-    (244, 144, 12), # double-yellow-solid
-    (221, 46, 68), # yellow-ldash-rsolid
-    (0, 0, 0), # yellow-lsolid-rdash
-    (0, 0, 0), # left-curbside
-    (0, 0, 0), # right-curbside
+    (0, 0, 0), # unkown #000000
+    (85, 172, 238), # white-dash #55acee
+    (120, 177, 89), # white-solid #78b159
+    (13, 90, 2), # double-white-dash #0d5a02
+    (221, 46, 68), # double-white-solid #dd2e44
+    (194, 190, 255), # white-ldash-rsolid #c2beff
+    (130, 233, 255), # white-lsolid-rdash #82e9ff
+    (172, 168, 0), # yellow-dash #aca800
+    (253, 203, 88), # yellow-solid #fdcb58
+    (44, 25, 255), # double-yellow-dash #2c19ff
+    (244, 144, 12), # double-yellow-solid #f4900c
+    (221, 46, 68), # yellow-ldash-rsolid #dd2e44
+    (255, 79, 204), # yellow-lsolid-rdash #ff4fcc
+    (109, 0, 109), # left-curbside #6d006d
+    (0, 109, 109), # right-curbside #006d6d
 ]
 
 
