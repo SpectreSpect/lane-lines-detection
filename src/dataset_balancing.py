@@ -425,8 +425,8 @@ def generate_plotted_videos(model: LaneLineModel, src_videos_path: str, output_p
     for idx, filename in enumerate(os.listdir(src_videos_path)):
         filepath = os.path.join(src_videos_path, filename)
         if os.path.isfile(filepath):
-            output_path = os.path.join(output_path, filename)
-            save_plotted_video(model, filepath, output_path, label_names, fps_=fps)
+            path = os.path.join(output_path, filename)
+            save_plotted_video(model, filepath, path, label_names, fps_=fps)
             if verbose:
                 print(f"{idx}: {filename}")
 

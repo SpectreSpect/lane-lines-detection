@@ -72,7 +72,7 @@ if __name__ == "__main__":
                          fps=5)
 
     # generate_plotted_videos(model, 
-    #                         "tmp/test_inputs_data/videos",
+    #                         "data/videos/videos_to_balancing",
     #                         "tmp/test_ouptut_plotted",
     #                         get_label_names("config.yaml"),
     #                         fps=5)
