@@ -475,9 +475,12 @@ def get_line_contour(
     mask_lines = []
     for mask in masks:
         t1 = time.time()
-        simplified_polygon = Polygon(mask.points_n).simplify(tolerance, preserve_topology=True)
-        points = np.array(simplified_polygon.exterior.coords)
-        points *= np.array([mask.orig_shape[1], mask.orig_shape[0]])
+        if mask.points_n.shape[0] > 4:
+            simplified_polygon = Polygon(mask.points_n).simplify(tolerance, preserve_topology=True)
+            points = np.array(simplified_polygon.exterior.coords)
+            points *= np.array([mask.orig_shape[1], mask.orig_shape[0]])
+        else:
+            points = mask.points
         
         if points.shape[0] == 0:
             break

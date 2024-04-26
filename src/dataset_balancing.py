@@ -155,7 +155,7 @@ def preview_prediction_video(model: LaneLineModel, video_path: str, config_path:
     save_predictions("test/images", "test/labels", images, predictions, label_names_dict_inversed, label_names_dict)
     
 
-def save_plotted_video(model: LaneLineModel, src_video_path: str, output_path: str, label_names: list = []):
+def save_plotted_video(model: LaneLineModel, src_video_path: str, output_path: str, label_names: list = [], fps_=-1, verbose=True):
     cap = cv2.VideoCapture(src_video_path)
     if not cap.isOpened():
         print("Can't open the video.")
@@ -165,11 +165,16 @@ def save_plotted_video(model: LaneLineModel, src_video_path: str, output_path: s
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
+
+    if fps_ <= 0:
+        fps_ = fps
+
     frames_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+    out = cv2.VideoWriter(output_path, fourcc, fps_, (width, height))
 
+    fps_n = fps // fps_
 
     frame = 0
     while cap.isOpened():
@@ -177,25 +182,23 @@ def save_plotted_video(model: LaneLineModel, src_video_path: str, output_path: s
         if not ret:
             break
 
-        if frame >= 100:
-            break
+        if frame % fps_n == 0:
+            # predictions = model.model.predict([image], verbose=False)
+            mask_batches = model.predict_masks([image])
+            batch_lines = model.get_lines(mask_batches)
+            
 
-        # predictions = model.model.predict([image], verbose=False)
-        mask_batches = model.predict_masks([image])
-        batch_lines = model.get_lines(mask_batches)
-        
+            # mask_batches = LaneMask.from_predictions(predictions, tolerance=0)
 
-        # mask_batches = LaneMask.from_predictions(predictions, tolerance=0)
-
-        draw_segmentation([image], mask_batches)
-        draw_lines([image], batch_lines)
-        if (len(label_names) > 0):
-            draw_labels([image], mask_batches, label_names)
- 
-        out.write(image)
+            draw_segmentation([image], mask_batches)
+            draw_lines([image], batch_lines)
+            if (len(label_names) > 0):
+                draw_labels([image], mask_batches, label_names)
+            out.write(image)
+            
         frame += 1
-
-        print(f"{frame}/{frames_count}")
+        if verbose:
+            print(f"frame {frame}/{frames_count}")
     out.release()
 
 
@@ -278,8 +281,11 @@ def save_prediction_2(lane_masks: list, output_path: str, tolerance: float = 0.0
     if lane_masks is not None:
         for idy, lane_mask in enumerate(lane_masks):
             
-            simplified_polygon = Polygon(lane_mask.points_n).simplify(tolerance, preserve_topology=True)
-            points = np.array(simplified_polygon.exterior.coords)
+            if lane_mask.points_n.shape[0] > 4:
+                simplified_polygon = Polygon(lane_mask.points_n).simplify(tolerance, preserve_topology=True)
+                points = np.array(simplified_polygon.exterior.coords)
+            else:
+                points = lane_mask.points_n
             
             file_string += str(lane_mask.label) + " "
             for idx, point in enumerate(points):
@@ -405,6 +411,16 @@ def videos_to_train_data(model: LaneLineModel, videos_path: str, video_segments_
                                     output_labels_path,
                                     output_videos_path,
                                     label_names, verbose=3)
+
+
+def generate_plotted_videos(model: LaneLineModel, src_videos_path: str, output_path: str, label_names: list = [], fps=-1, verbose=True):
+    for idx, filename in enumerate(os.listdir(src_videos_path)):
+        filepath = os.path.join(src_videos_path, filename)
+        if os.path.isfile(filepath):
+            output_path = os.path.join(output_path, filename)
+            save_plotted_video(model, filepath, output_path, label_names, fps_=fps)
+            if verbose:
+                print(f"{idx}: {filename}")
 
 
 # def video_to_train_data(model: LaneLineModel, video_path: str, video_segments_path: str, ouput_images_path: str, output_labels_path: str, tolerance=0.0015):
