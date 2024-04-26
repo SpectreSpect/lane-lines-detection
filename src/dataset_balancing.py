@@ -55,6 +55,11 @@ def get_label_names_dict_inversed(config_path: str) -> list:
     return inv_map
 
 
+def get_label_names_dict_inversed_from_label_names(label_names: list):
+    names_dict = {str(i): name for i, name in enumerate(label_names)}
+    inv_map = {v: k for k, v in names_dict.items()} 
+    return inv_map
+
 def print_labels_distribution_stats(labels_path: str, config_path: str):
     labels_df = get_labels_df(labels_path)
     label_names = get_label_names(config_path)
