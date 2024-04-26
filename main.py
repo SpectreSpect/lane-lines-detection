@@ -64,17 +64,18 @@ if __name__ == "__main__":
     #                              "tmp/test_videos",
     #                              get_label_names("config.yaml"))
     
-    # videos_to_train_data(model, 
-    #                      "tmp/test_inputs_data/videos", 
-    #                      "tmp/test_inputs_data/segments", 
-    #                      "tmp/test_storage3",
-    #                      get_label_names("config.yaml"))
+    videos_to_train_data(model, 
+                         "tmp/test_inputs_data/videos", 
+                         "tmp/test_inputs_data/segments", 
+                         "tmp/test_storage3",
+                         get_label_names("config.yaml"),
+                         fps=5)
 
-    generate_plotted_videos(model, 
-                            "tmp/test_inputs_data/videos",
-                            "tmp/test_ouptut_plotted",
-                            get_label_names("config.yaml"),
-                            fps=5)
+    # generate_plotted_videos(model, 
+    #                         "tmp/test_inputs_data/videos",
+    #                         "tmp/test_ouptut_plotted",
+    #                         get_label_names("config.yaml"),
+    #                         fps=5)
 
     ###############################################################################################################################################
     # video_segment_to_train_data(model, cap, video_segments[0], "test/images", "test/labels")
