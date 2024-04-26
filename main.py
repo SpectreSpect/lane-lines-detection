@@ -34,7 +34,8 @@ def load_images(path: str, max_images_count=-1) -> list:
 
 
 if __name__ == "__main__":
-    from_cvat_to_yolo("tmp/test_input_cvat_data", 
+    from_cvat_to_yolo("data/road-to-adler-2_double-white-solid/road-to-adler-2(double-white-solid).mp4",
+                      "data/road-to-adler-2_double-white-solid/annotations.xml",
                       "tmp/temp_yolo_labels/images", 
                       "tmp/temp_yolo_labels/labels",
                       get_label_names("config.yaml"))

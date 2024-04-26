@@ -20,8 +20,8 @@ def get_lane_lines_from_xml(path: str, label_names: list) -> list:
 
     for track in track_elements:
         track_id = track.attrib['id']
-        # label = int(label_names_dict_inversed[str(track.attrib['label'])])
-        label = str(track.attrib['label'])
+        label = int(label_names_dict_inversed[str(track.attrib['label'])])
+        # label = str(track.attrib['label'])
 
         polylines = track.findall('.//polyline')
 
@@ -58,7 +58,7 @@ def from_masks_to_yolo(masks: list, output_file_path: str):
         label = mask.label
         points_n = mask.points_n
 
-        output_string += label + " "
+        output_string += str(label) + " "
         for pid, point in enumerate(points_n):
             output_string += str(point[0]) + " " + str(point[1])
             output_string += " " if pid < (len(points_n) - 1) else "\n"
@@ -87,39 +87,54 @@ def generate_random_names(names_count):
     return names
 
 
-def from_cvat_to_yolo(data_folder: str, output_images_folder: str, output_labels_folder: str, label_names: list):
-    xml_path = os.path.join(data_folder, "annotations.xml")
-    frames_count = get_frames_count_from_xml(xml_path)
-    input_images_path = os.path.join(data_folder, "images") 
-    
-    first_image_path = None
-    image_names = []
-    idx = 0
-    for filename in os.listdir(input_images_path):
-        file_path = os.path.join(input_images_path, filename)
-        if os.path.isfile(file_path):
-            if idx <= 0:
-                first_image_path = file_path
-                image_names.append(filename)
-            idx += 1
-    
-    if first_image_path is not None:
-        img = cv2.imread("first_image_path")
-        height, width, _ = img.shape
-        shape = (width, height)
-    else:
-        shape = (1920, 1080)
-    
-    random_names = generate_random_names(frames_count)
+def get_video_shape(video_path: str) -> list:
+    video = cv2.VideoCapture(video_path)
 
+    width = video.get(cv2.CAP_PROP_FRAME_WIDTH)
+    height = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    video.release()
+
+    return [width, height]
+
+
+def from_cvat_to_yolo(video_path: str, xml_path: str, output_images_folder: str, output_labels_folder: str, label_names: list):
+    # xml_path = os.path.join(data_folder, "annotations.xml")
+    # xml_path = xml_path
+    
+    # input_images_path = os.path.join(data_folder, "images") 
+    # input_images_path = video_path
+    
+    # first_image_path = None
+    # image_names = []
+    # idx = 0
+    # for filename in os.listdir(input_images_path):
+    #     file_path = os.path.join(input_images_path, filename)
+    #     if os.path.isfile(file_path):
+    #         if idx <= 0:
+    #             first_image_path = file_path
+    #             image_names.append(filename)
+    #         idx += 1
+    
+    # if first_image_path is not None:
+    #     img = cv2.imread("first_image_path")
+    #     height, width, _ = img.shape
+    #     shape = (width, height)
+    # else:
+    #     shape = (1920, 1080)
+    
+    frames_count = get_frames_count_from_xml(xml_path)
+    random_names = generate_random_names(frames_count)
+    shape = get_video_shape(video_path)
+
+    save_video_into_frames(video_path, output_images_folder, random_names)
     from_xml_to_yolo(xml_path, output_labels_folder, label_names, shape, random_names=random_names)
 
-    for image_name in image_names:
-        index = re.findall("[/d]+", image_name)
-        new_name = random_names[index]
-        os.rename(image_name, new_name)
+    # for image_name in image_names:
+    #     index = re.findall("[/d]+", image_name)
+    #     new_name = random_names[index]
+    #     os.rename(image_name, new_name)
 
-    move_files(input_images_path, output_images_folder)
+    # move_files(input_images_path, output_images_folder)
 
     
 
