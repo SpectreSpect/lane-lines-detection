@@ -7,6 +7,7 @@ from timeit import default_timer as timer
 import time
 import os
 import re
+import shutil
 
 # default_palette = [
 #     (255, 0, 0),
@@ -37,6 +38,15 @@ default_palette = [
 ]
 
 
+class LaneLine():
+    def __init__(self, points: np.ndarray, label: int, points_n: np.ndarray = [], elapsed_time=0, mask_count_points=0):
+        self.points = points
+        self.points_n = points_n
+        self.label = label
+        self.elapsed_time = elapsed_time
+        self.mask_count_points=mask_count_points
+
+
 class LaneMask():
     def __init__(self, points: np.ndarray = [], points_n: np.ndarray = [], label: int = [], orig_shape: np.ndarray = None):
         self.points = points
@@ -62,6 +72,49 @@ class LaneMask():
                     lane_mask = LaneMask(xy, points_n, label, prediction.masks.orig_shape)
                     lane_masks.append(lane_mask)
             mask_batches.append(lane_masks)
+        return mask_batches
+    
+
+    @staticmethod
+    def from_line_to_mask(line: LaneLine, shape=(1920, 1080), tolerance=0.0015):
+        if line.points.shape[0] <= 0:
+            return None
+
+        # shape = (shape[1], shape[0])
+
+        image = np.zeros((shape[1], shape[0], 1), dtype=np.uint8)
+        
+        if line.points.shape[0] == 1:
+            cv2.circle(image, (line.points[0] * np.array(shape)).astype(int), 10, (255), -1) # You may need to adjust the radius
+        else:
+            for idx in range(1, len(line.points)):
+                cv2.line(image, 
+                        (line.points[idx - 1]).astype(int),
+                        (line.points[idx]).astype(int), 
+                        color=(255), 
+                        thickness=20) # You may need to adjust the thickness
+        
+        contours, _ = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        points = np.array(contours[0]).reshape(-1, 2).astype(np.float32)
+        points /= np.array(shape).astype(np.float32)
+
+        simplified_polygon = Polygon(points).simplify(tolerance, preserve_topology=True)
+        points_n = np.array(simplified_polygon.exterior.coords)
+
+        points = points_n * np.array(shape).astype(np.float32)
+        points = points.astype(np.int32)
+
+        lane_mask = LaneMask(points, points_n, line.label, shape)
+        return lane_mask
+    
+
+    def from_line_batches_to_mask_batches(line_batches: list, orig_shape) -> list:
+        mask_batches = []
+        for lines in line_batches:
+            mask_batches.append([])
+            for line in lines:
+                lane_mask = LaneMask(line.points, line.points_n, line.label, orig_shape)
+                mask_batches[-1].append(lane_mask)
         return mask_batches
     
 
@@ -150,12 +203,7 @@ class LaneMask():
         show_images([plot_image])
 
 
-class LaneLine():
-    def __init__(self, points: np.ndarray, label: int, elapsed_time=0, mask_count_points=0):
-        self.points = points
-        self.label = label
-        self.elapsed_time = elapsed_time
-        self.mask_count_points=mask_count_points
+
 
 
 def get_lines(mask_batches, subtitutions: list = None):
@@ -621,3 +669,18 @@ def str_to_seconds(string: str):
     
     output = seconds + minutes * 60 + hours * 60 * 60
     return output
+
+
+def move_files(source_path, target_path, max_items=-1, verbose=0):
+    if os.path.isdir(target_path):
+        idx = 0
+        for image_name in os.listdir(source_path):
+            full_source_path = os.path.join(source_path, image_name)
+            if os.path.isfile(full_source_path):
+                if max_items >= 0:
+                    if idx >= max_items:
+                        break
+                shutil.move(full_source_path, target_path)
+                if verbose == 1:
+                    print(f"moved: {idx}/{max_items}    path: {full_source_path}")
+                idx += 1
