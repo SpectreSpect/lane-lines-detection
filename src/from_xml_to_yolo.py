@@ -97,54 +97,38 @@ def get_video_shape(video_path: str) -> list:
     return [width, height]
 
 
-def from_cvat_to_yolo(video_path: str, xml_path: str, output_images_folder: str, output_labels_folder: str, label_names: list):
-    # xml_path = os.path.join(data_folder, "annotations.xml")
-    # xml_path = xml_path
-    
-    # input_images_path = os.path.join(data_folder, "images") 
-    # input_images_path = video_path
-    
-    # first_image_path = None
-    # image_names = []
-    # idx = 0
-    # for filename in os.listdir(input_images_path):
-    #     file_path = os.path.join(input_images_path, filename)
-    #     if os.path.isfile(file_path):
-    #         if idx <= 0:
-    #             first_image_path = file_path
-    #             image_names.append(filename)
-    #         idx += 1
-    
-    # if first_image_path is not None:
-    #     img = cv2.imread("first_image_path")
-    #     height, width, _ = img.shape
-    #     shape = (width, height)
-    # else:
-    #     shape = (1920, 1080)
-    
-    frames_count = get_frames_count_from_xml(xml_path)
-    random_names = generate_random_names(frames_count)
-    shape = get_video_shape(video_path)
+def from_cvat_to_yolo(output_images_folder: str, output_labels_folder: str, label_names: list, 
+                      input_video_path: str = None, 
+                      xml_path: str = None, 
+                      input_labels_path: str = None,
+                      input_videos_path: str = None, verbose=1):
+    if (input_labels_path is not None) and (input_videos_path is not None):
+        # label_file_names = get_file_names(input_labels_path)
+        video_file_names = get_file_names(input_videos_path)
 
-    save_video_into_frames(video_path, output_images_folder, random_names)
-    from_xml_to_yolo(xml_path, output_labels_folder, label_names, shape, random_names=random_names)
+        for idx, video_file_name in enumerate(video_file_names):
+            if verbose == 1:
+                print(f"{idx}) {video_file_name}")
+            video_file_name_without_ext, _ = os.path.splitext(video_file_name)
+            label_file_name = str(video_file_name_without_ext) + ".xml"
 
-    # for image_name in image_names:
-    #     index = re.findall("[/d]+", image_name)
-    #     new_name = random_names[index]
-    #     os.rename(image_name, new_name)
 
-    # move_files(input_images_path, output_images_folder)
+            video_path = os.path.join(input_videos_path, video_file_name)
+            label_file_path = os.path.join(input_labels_path, label_file_name)
 
+            frames_count = get_frames_count_from_xml(label_file_path)
+            random_names = generate_random_names(frames_count)
+            shape = get_video_shape(video_path)
+
+            save_video_into_frames(video_path, output_images_folder, random_names)
+            from_xml_to_yolo(label_file_path, output_labels_folder, label_names, shape, random_names=random_names)
+    else:
+        frames_count = get_frames_count_from_xml(xml_path)
+        random_names = generate_random_names(frames_count)
+        shape = get_video_shape(input_video_path)
+
+        save_video_into_frames(input_video_path, output_images_folder, random_names)
+        from_xml_to_yolo(xml_path, output_labels_folder, label_names, shape, random_names=random_names)
     
 
-# def from_lane_line_batch_to_yolo(lane_line_batch: list, ouput_path: str):
-#     output_string = ""
-#     for lane_line in lane_line_batch:
-        
-
-
-# def from_xml_to_yolo(xml_path: str, output_path: str):
-#     lane_lines = get_lane_lines_from_xml(xml_path)
-
-    # lane_lines
+    

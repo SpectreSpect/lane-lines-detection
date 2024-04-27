@@ -34,12 +34,20 @@ def load_images(path: str, max_images_count=-1) -> list:
 
 
 if __name__ == "__main__":
-    from_cvat_to_yolo("data/road-to-adler-2_double-white-solid/road-to-adler-2(double-white-solid).mp4",
-                      "data/road-to-adler-2_double-white-solid/annotations.xml",
-                      "tmp/temp_yolo_labels/images", 
-                      "tmp/temp_yolo_labels/labels",
-                      get_label_names("config.yaml"))
-    # lane_line_batches = get_lane_lines_from_xml("data/annotations.xml", get_label_names("config.yaml"))
-    # lane_mask_batches = LaneMask.from_line_batches_to_mask_batches(lane_line_batches, (1920, 1080))
+    # from_cvat_to_yolo("data/new_yolo_data/images",
+    #                   "data/new_yolo_data/labels",
+    #                   get_label_names("config.yaml"),
+    #                   input_videos_path="data/new_data/videos",
+    #                   input_labels_path="data/new_data/labels")
+    
 
-    # from_mask_batches_to_yolo(lane_mask_batches, "tmp/temp_yolo_labels")
+    # from_cvat_to_yolo("data/road-to-adler-2_double-white-solid/road-to-adler-2(double-white-solid).mp4",
+    #                   "data/road-to-adler-2_double-white-solid/annotations.xml",
+    #                   "tmp/temp_yolo_labels/images", 
+    #                   "tmp/temp_yolo_labels/labels",
+    #                   get_label_names("config.yaml"))
+    
+
+    
+    LaneMask.visualize_masks(masks_path="data/new_yolo_data/labels/1b7b711d-e92c-448b-b372-17dbeeea9de6.txt",
+                             image_path="data/new_yolo_data/images/1b7b711d-e92c-448b-b372-17dbeeea9de6.jpg", mask_alpha=0.8)

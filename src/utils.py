@@ -82,7 +82,7 @@ class LaneMask():
 
         # shape = (shape[1], shape[0])
 
-        image = np.zeros((shape[1], shape[0], 1), dtype=np.uint8)
+        image = np.zeros((int(shape[1]), int(shape[0]), 1), dtype=np.uint8)
         
         if line.points.shape[0] == 1:
             cv2.circle(image, (line.points[0] * np.array(shape)).astype(int), 10, (255), -1) # You may need to adjust the radius
@@ -113,7 +113,8 @@ class LaneMask():
         for lines in line_batches:
             mask_batches.append([])
             for line in lines:
-                lane_mask = LaneMask(line.points, line.points_n, line.label, orig_shape)
+                lane_mask = LaneMask.from_line_to_mask(line, orig_shape, 0.0015)
+                # lane_mask = LaneMask(line.points, line.points_n, line.label, orig_shape)
                 mask_batches[-1].append(lane_mask)
         return mask_batches
     
@@ -169,7 +170,7 @@ class LaneMask():
     
 
     @staticmethod
-    def generate_plot(masks, image=None, image_path=None, mask_alpha=0.2, draw_lines=True):
+    def generate_plot(masks, image=None, image_path=None, mask_alpha=0.2, draw_lines_bool=True):
         # image_to_draw = np.copy(image)
         # batch_lines = get_lines([masks])
         # draw_segmentation(image_to_draw, [masks])
@@ -183,7 +184,7 @@ class LaneMask():
 
         images_to_draw = np.copy([image])
         draw_segmentation(images_to_draw, mask_batches, mask_alpha)
-        if draw_lines:
+        if draw_lines_bool:
             draw_lines(images_to_draw, batch_lines)
 
         return images_to_draw[0]
@@ -197,7 +198,7 @@ class LaneMask():
         if masks is None:
             masks = LaneMask.from_file(masks_path, image=image)
 
-        plot_image = LaneMask.generate_plot(masks, image=image, mask_alpha=mask_alpha, draw_lines=draw_lines)
+        plot_image = LaneMask.generate_plot(masks, image=image, mask_alpha=mask_alpha, draw_lines_bool=draw_lines)
         plot_image = cv2.cvtColor(plot_image, cv2.COLOR_BGR2RGB)
         
         show_images([plot_image])
