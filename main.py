@@ -34,6 +34,10 @@ def load_images(path: str, max_images_count=-1) -> list:
 
 
 if __name__ == "__main__":
+    model = LaneLineModel("models/new-sizefull-ep50/model.pt")
+    view_prediction_video(model, "data/new_data/videos/Recording 2024-04-26 161735.mp4", get_label_names("config.yaml"))
+    
+
     # from_cvat_to_yolo("data/new_yolo_data/images",
     #                   "data/new_yolo_data/labels",
     #                   get_label_names("config.yaml"),
@@ -49,5 +53,7 @@ if __name__ == "__main__":
     
 
     
-    LaneMask.visualize_masks(masks_path="data/new_yolo_data/labels/1b7b711d-e92c-448b-b372-17dbeeea9de6.txt",
-                             image_path="data/new_yolo_data/images/1b7b711d-e92c-448b-b372-17dbeeea9de6.jpg", mask_alpha=0.8)
+    # LaneMask.visualize_masks(masks_path="data/new_yolo_data/labels/1b7b711d-e92c-448b-b372-17dbeeea9de6.txt",
+    #                          image_path="data/new_yolo_data/images/1b7b711d-e92c-448b-b372-17dbeeea9de6.jpg", mask_alpha=0.8)
+
+    
