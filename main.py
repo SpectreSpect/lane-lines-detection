@@ -9,6 +9,7 @@ from src.utils import *
 from src.dataset_balancing import *
 from src.from_xml_to_yolo import *
 import re
+import time
 
 
 def load_image(path: str):
@@ -34,26 +35,44 @@ def load_images(path: str, max_images_count=-1) -> list:
 
 
 if __name__ == "__main__":
-    model = LaneLineModel("models/new-sizefull-ep50/model.pt")
-    view_prediction_video(model, "data/new_data/videos/Recording 2024-04-26 161735.mp4", get_label_names("config.yaml"))
-    
+    model = LaneLineModel("models/data-openlane-vs02-e50/model.pt")
 
-    # from_cvat_to_yolo("data/new_yolo_data/images",
-    #                   "data/new_yolo_data/labels",
-    #                   get_label_names("config.yaml"),
-    #                   input_videos_path="data/new_data/videos",
-    #                   input_labels_path="data/new_data/labels")
-    
+    x_data = []
+    y_data = []
 
-    # from_cvat_to_yolo("data/road-to-adler-2_double-white-solid/road-to-adler-2(double-white-solid).mp4",
-    #                   "data/road-to-adler-2_double-white-solid/annotations.xml",
-    #                   "tmp/temp_yolo_labels/images", 
-    #                   "tmp/temp_yolo_labels/labels",
-    #                   get_label_names("config.yaml"))
-    
+    n_frame = [0]
+    start_time = time.time()
 
+    def start_frame_callback():
+        global start_frame_time
+        start_frame_time = time.time()
     
-    # LaneMask.visualize_masks(masks_path="data/new_yolo_data/labels/1b7b711d-e92c-448b-b372-17dbeeea9de6.txt",
-    #                          image_path="data/new_yolo_data/images/1b7b711d-e92c-448b-b372-17dbeeea9de6.jpg", mask_alpha=0.8)
+    def end_frame_callback():
+        end_frame_time = time.time()
+        
+        frame_time = end_frame_time - start_frame_time 
+        
+        x_data.append(n_frame[0])
+        y_data.append(frame_time)
+        n_frame[0] += 1
 
-    
+    view_prediction_video(model, 
+                          "data/videos/road-video-yellow-solid.mp4", 
+                          get_label_names("config.yaml"), 
+                          1000, 
+                          start_frame_callback=start_frame_callback, 
+                          end_frame_callback=end_frame_callback,
+                          max_frames=200)
+
+    y_data = np.array(y_data)
+
+    y_mean = y_data.mean()
+    y_std = y_data.std()
+
+    print(float(np.array(y_data).mean()) * 1000)
+    plt.plot(x_data, y_data)
+    plt.ylim(y_mean - y_std, y_mean + y_std)
+    plt.xlabel("Номер кадра")
+    plt.ylabel("Время, мс.")
+    plt.title("График времени предсказания")
+    plt.show()
