@@ -385,9 +385,7 @@ def view_prediction_video(model, src, label_names=[], resized_width=-1, save_pre
 
         # Обработка изображения
         start = timer()
-        predictions = model.model.predict([image], verbose=False)
-        mask_batches = model.predict_masks([image])
-        batch_lines = model.get_lines(mask_batches)
+        batch_lines, mask_batches, predictions = model.predict([image])
         end = timer()
 
         if save_predictions:
