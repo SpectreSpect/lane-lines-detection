@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import math
 from src.utils import *
 from src.dataset_balancing import *
+from src.reinforcement_data import *
 import re
 
 
@@ -33,54 +34,6 @@ def load_images(path: str, max_images_count=-1) -> list:
 
 
 if __name__ == "__main__":
-    model = LaneLineModel("models/sizefull-ep20/model.pt")
-
-
-    # video_segments = read_video_segments("video-segments.txt")
-
-    # view_prediction_video(model, "data/videos/road-video-russia.mp4")
-
-    ############################################################################################################################################
-
-#     video_segments = read_video_segments("video-segments.txt")
-# # 
-
-    # cap = cv2.VideoCapture("road-video-russia-PLOTTED.mp4")
-
-    cap = cv2.VideoCapture("data/example.mp4")
-    if not cap.isOpened():
-        print("Can't open the video.")
-        cap.release()
-
-    # video_segment_to_train_data(model, cap, video_segments[0], "test/images", "test/labels", output_video_path="test_video.mp4")
-
-    ###############################################################################################################################################
-    # video_segment_to_train_data(model, cap, video_segments[0], "test/images", "test/labels")
-
-
-
-    # video_segments = read_video_segments("video-segments.txt")
-    # for video_segment in video_segments:
-    #     print(f"{video_segment.start_time}s {video_segment.end_time}s {video_segment.substitutions}")
-
-
-    # model = LaneLineModel("models/sizefull-ep20/model.pt")
-
-    # save_plotted_video(model, "data/videos/road-video-russia.mp4", "road-video-russia-PLOTTED.mp4")
-
-    # (1:20, 1:30, [(5, 2), (6, 7), (9, 11)])
-
-    # "20" = 20 sec
-    # "1:20" = 1 minute 20 seconds
-    # "3:01:20" = 3 hours 1 minute 20 seconds
-
-    # preview_prediction_video(model, "data/videos/road-video-russia.mp4", "config.yaml")
-
-
-
-    # images, predictions = view_prediction_video(model, "data/videos/road-video-russia.mp4", True)
-
-    # print(f"images len: {len(images)}   preds len: {len(predictions)}")
-    # print(type(predictions[0][0][0]))
-
-    # print_labels_distribution_stats("data/yolov8-sizefull-val02-fmasks/labels/train", "config.yaml")
+    model = YOLO("models/robolife-detection-yolov8l-seg/model.pt")
+    data_generator = DataGenerator(model)
+    data_generator.generate("data/plastic_drum_images", "tmp/output_folder")
