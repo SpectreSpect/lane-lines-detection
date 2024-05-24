@@ -6,6 +6,8 @@ from shapely.geometry import LineString, Polygon
 from timeit import default_timer as timer
 import time
 import os
+import re
+import shutil
 
 # default_palette = [
 #     (255, 0, 0),
@@ -18,22 +20,60 @@ import os
 # ]
 
 default_palette = [
-    (0, 0, 0), # unkown
-    (85, 172, 238), # white-dash
-    (120, 177, 89), # white-solid
-    (0, 0, 0), # double-white-dash
-    (0, 0, 0), # double-white-solid
-    (0, 0, 0), # white-ldash-rsolid
-    (0, 0, 0), # white-lsolid-rdash
-    (0, 0, 0), # yellow-dash
-    (253, 203, 88), # yellow-solid
-    (0, 0, 0), # double-yellow-dash
-    (244, 144, 12), # double-yellow-solid
-    (221, 46, 68), # yellow-ldash-rsolid
-    (0, 0, 0), # yellow-lsolid-rdash
-    (0, 0, 0), # left-curbside
-    (0, 0, 0), # right-curbside
+    (0, 0, 0), # unkown #000000
+    (85, 172, 238), # white-dash #55acee
+    (120, 177, 89), # white-solid #78b159
+    (13, 90, 2), # double-white-dash #0d5a02
+    (221, 46, 68), # double-white-solid #dd2e44
+    (194, 190, 255), # white-ldash-rsolid #c2beff
+    (130, 233, 255), # white-lsolid-rdash #82e9ff
+    (172, 168, 0), # yellow-dash #aca800
+    (253, 203, 88), # yellow-solid #fdcb58
+    (44, 25, 255), # double-yellow-dash #2c19ff
+    (244, 144, 12), # double-yellow-solid #f4900c
+    (221, 46, 68), # yellow-ldash-rsolid #dd2e44
+    (255, 79, 204), # yellow-lsolid-rdash #ff4fcc
+    (109, 0, 109), # left-curbside #6d006d
+    (0, 109, 109), # right-curbside #006d6d
 ]
+
+
+class BoundingBox():
+    def __init__(self, label: int, x: float, y: float, width: float, height: float, image_name: str = ""):
+        self.label = label
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.image_name = image_name
+    
+
+    @staticmethod
+    def boxes_to_yolo(bounding_boxes: list, output_file_path: str):
+        ouput_string = ""
+        for box in bounding_boxes:
+            ouput_string += f"{box.label} {box.x} {box.y} {box.width} {box.height}\n"
+        
+        with open(output_file_path, 'a') as file:
+            file.write(ouput_string)
+    
+
+    @staticmethod
+    def batches_to_yolo(bounding_box_batches: list, output_file_path: str):
+        ouput_string = ""
+        for boxes in bounding_box_batches:
+            image_name = boxes[0].image_name
+            path = os.path.join(output_file_path, image_name) + ".txt"
+            BoundingBox.boxes_to_yolo(boxes, path)
+
+
+class LaneLine():
+    def __init__(self, points: np.ndarray, label: int, points_n: np.ndarray = [], elapsed_time=0, mask_count_points=0):
+        self.points = points
+        self.points_n = points_n
+        self.label = label
+        self.elapsed_time = elapsed_time
+        self.mask_count_points=mask_count_points
 
 
 class LaneMask():
@@ -42,8 +82,8 @@ class LaneMask():
         self.label = label
         self.orig_shape = orig_shape
         self.points_n = points_n
-            
-    
+
+
     @staticmethod
     def from_predictions(predictions, tolerance=0) -> list:
         mask_batches = []
@@ -64,6 +104,89 @@ class LaneMask():
         return mask_batches
     
 
+    @staticmethod
+    def from_line_to_mask(line: LaneLine, shape=(1920, 1080), tolerance=0.0015):
+        if line.points.shape[0] <= 0:
+            return None
+
+        # shape = (shape[1], shape[0])
+
+        image = np.zeros((int(shape[1]), int(shape[0]), 1), dtype=np.uint8)
+        
+        if line.points.shape[0] == 1:
+            cv2.circle(image, (line.points[0] * np.array(shape)).astype(int), 10, (255), -1) # You may need to adjust the radius
+        else:
+            for idx in range(1, len(line.points)):
+                cv2.line(image, 
+                        (line.points[idx - 1]).astype(int),
+                        (line.points[idx]).astype(int), 
+                        color=(255), 
+                        thickness=20) # You may need to adjust the thickness
+        
+        contours, _ = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        points = np.array(contours[0]).reshape(-1, 2).astype(np.float32)
+        points /= np.array(shape).astype(np.float32)
+
+        simplified_polygon = Polygon(points).simplify(tolerance, preserve_topology=True)
+        points_n = np.array(simplified_polygon.exterior.coords)
+
+        points = points_n * np.array(shape).astype(np.float32)
+        points = points.astype(np.int32)
+
+        lane_mask = LaneMask(points, points_n, line.label, shape)
+        return lane_mask
+    
+
+    def from_line_batches_to_mask_batches(line_batches: list, orig_shape) -> list:
+        mask_batches = []
+        for lines in line_batches:
+            mask_batches.append([])
+            for line in lines:
+                lane_mask = LaneMask.from_line_to_mask(line, orig_shape, 0.0015)
+                # lane_mask = LaneMask(line.points, line.points_n, line.label, orig_shape)
+                mask_batches[-1].append(lane_mask)
+        return mask_batches
+    
+
+    def from_file(file_path: str, orig_shape = None, image: np.ndarray = None, image_path: str = None) -> list:
+        masks = []
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+            for line in lines:
+                # values = re.findall(r'\d+', line)
+                values = re.findall(r"[-+]?(?:\d*\.*\d+)", line)
+                label = int(values[0])
+                points_n = []
+
+                for idx in range(1, len(values[1:]), 2):
+                    point = [float(values[idx]), float(values[idx + 1])]
+                    points_n.append(point)
+                points_n = np.array(points_n)
+
+                shape = None
+                if orig_shape is not None:
+                    shape = orig_shape
+                elif image is not None:
+                    shape = (image.shape[0], image.shape[1])
+                elif image_path is not None:
+                    new_image = cv2.imread(image_path)
+                    shape = (new_image.shape[0], new_image.shape[1])
+                
+                points = None
+                if shape is not None:
+                    points = points_n.copy()
+                    # points = points_n
+                    # points[:, 0] *= shape[0]
+                    # points[:, 1] *= shape[1]
+                    points[:, 0] *= shape[1]
+                    points[:, 1] *= shape[0]
+                # points = np.array(points, dtype=int)
+
+                lane_mask = LaneMask(points, points_n, label, shape)
+                masks.append(lane_mask)
+        return masks
+    
+
     def substitute_label(self, substitutions: list):
         if str(self.label) in substitutions:
             self.label = int(substitutions[str(self.label)])
@@ -73,15 +196,53 @@ class LaneMask():
     def substitute_labels(masks, substitutions: list):
         for mask in masks:
             mask.substitute_label(substitutions)
+    
+
+    @staticmethod
+    def generate_plot(masks, image=None, image_path=None, mask_alpha=0.2, draw_lines_bool=True):
+        # image_to_draw = np.copy(image)
+        # batch_lines = get_lines([masks])
+        # draw_segmentation(image_to_draw, [masks])
+        # draw_lines(image_to_draw, batch_lines)
+        if image is None:
+            image = cv2.imread(image_path)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        mask_batches = [masks]
+        batch_lines = get_lines(mask_batches)
+
+        images_to_draw = np.copy([image])
+        draw_segmentation(images_to_draw, mask_batches, mask_alpha)
+        if draw_lines_bool:
+            draw_lines(images_to_draw, batch_lines)
+
+        return images_to_draw[0]
+    
+
+    @staticmethod
+    def visualize_masks(masks=None, image=None, masks_path: str = None, image_path: str = None, mask_alpha=0.2, draw_lines=True):
+        if image is None:
+            image = cv2.imread(image_path)
+
+        if masks is None:
+            masks = LaneMask.from_file(masks_path, image=image)
+
+        plot_image = LaneMask.generate_plot(masks, image=image, mask_alpha=mask_alpha, draw_lines_bool=draw_lines)
+        plot_image = cv2.cvtColor(plot_image, cv2.COLOR_BGR2RGB)
+        
+        show_images([plot_image])
 
 
-class LaneLine():
-    def __init__(self, points: np.ndarray, label: int, elapsed_time=0, mask_count_points=0):
-        self.points = points
-        self.label = label
-        self.elapsed_time = elapsed_time
-        self.mask_count_points=mask_count_points
 
+
+
+def get_lines(mask_batches, subtitutions: list = None):
+        # if self.use_curve_line:
+        #     batch_lines = get_lines_contours(mask_batches)
+        # else:
+        #     batch_lines = get_straight_lines(mask_batches)
+        batch_lines = get_lines_contours(mask_batches)
+        return batch_lines
 
 
 def draw_segmentation_(image, masks, alpha=0.4, palette=default_palette):
@@ -121,6 +282,48 @@ def draw_lines(images, batch_curves, palette=default_palette, thickness=4):
             for id in range(1, len(lane_line.points)):
                 cv2.line(image, lane_line.points[id - 1], lane_line.points[id], color, thickness=thickness)
 
+
+def draw_labels(
+        images, 
+        mask_batches,
+        label_names, 
+        margin=5, 
+        padding=5,
+        font_scale=0.8,
+        thickness=2, 
+        alpha=0.7,
+        alpha_font=0.4):
+    widget_position = np.array([margin, margin])
+
+    unactive_color = tuple((np.array([255, 255, 255], dtype=np.uint8) * alpha_font).tolist())
+    for image, masks in zip(images, mask_batches):
+        #alpha_mask = np.zeros(image.shape[:2] + (1,))
+        name_data = []
+        mask_image = np.zeros_like(image)
+        for idx, name in enumerate(label_names):
+            text = f"{idx}: {name}"
+            text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness=thickness)[0]
+            element_size = text_size + np.array([padding, padding]) * 2
+
+            mask_position = widget_position + np.array([0, (element_size[1] + margin) * idx])
+            text_position = mask_position + np.array([padding, padding])
+            
+            name_data.append({"text": text, "text_size": text_size, "element_size": element_size, "mask_position": mask_position, "text_position": text_position})
+            cv2.rectangle(mask_image, mask_position, mask_position + element_size, (1, 1, 1), -1)
+        
+        indices = mask_image != np.array([0, 0, 0], dtype=np.uint8)
+        image[indices] = mask_image[indices] * alpha + image[indices] * (1 - alpha)
+
+        labels = [mask.label for mask in masks]
+
+        for idx, data in enumerate(name_data):
+            color = unactive_color
+            if idx in labels:
+                color = default_palette[idx]
+            
+            color = (color[2], color[1], color[0])
+            cv2.putText(image, data['text'], data['text_position'] + np.array([0, data['text_size'][1]]), cv2.FONT_HERSHEY_SIMPLEX, fontScale=font_scale, color=color, thickness=thickness)
+    return images
 
 def show_images(images, figsize=(15, 5), count_images_for_ineration=2, columns=2):
     columns = min(len(images), columns)
@@ -168,13 +371,12 @@ def paint_str(string: str, color):
     # print(text.format(color[0], color[1], color[2]))
 
 
-def view_prediction_video(model, src, save_predictions=False, verbose=0):
+def view_prediction_video(model, src, label_names=[], save_predictions=False, verbose=0):
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
         print("Не удалось открыть файл.")
         cap.release()
         return
-    
 
     mean_hertz = 0
     mean_elapsed_time = 0
@@ -246,6 +448,8 @@ def view_prediction_video(model, src, save_predictions=False, verbose=0):
 
         draw_segmentation([image], mask_batches)
         draw_lines([image], batch_lines)
+        draw_labels([image], mask_batches, label_names)
+
         cv2.imshow('prediction video', image)
 
         key_code = cv2.waitKey(5) & 0xFF
@@ -349,9 +553,12 @@ def get_line_contour(
     mask_lines = []
     for mask in masks:
         t1 = time.time()
-        simplified_polygon = Polygon(mask.points_n).simplify(tolerance, preserve_topology=True)
-        points = np.array(simplified_polygon.exterior.coords)
-        points *= np.array([mask.orig_shape[1], mask.orig_shape[0]])
+        if mask.points_n.shape[0] > 4:
+            simplified_polygon = Polygon(mask.points_n).simplify(tolerance, preserve_topology=True)
+            points = np.array(simplified_polygon.exterior.coords)
+            points *= np.array([mask.orig_shape[1], mask.orig_shape[0]])
+        else:
+            points = mask.points
         
         if points.shape[0] == 0:
             break
@@ -434,7 +641,7 @@ def get_line_contour(
             
             i += 1
         if count_pass >= min_id_dis:
-            mask_lines.append(LaneLine(np.array([], dtype=np.int32), int(cls)))
+            mask_lines.append(LaneLine(np.array([], dtype=np.int32), int(mask.label)))
             break
             
         start_point2_id = correct_point(points,start_point1_id, start_point2_id, max_distance, dist_accum_factor, n_accum)
@@ -492,3 +699,18 @@ def str_to_seconds(string: str):
     
     output = seconds + minutes * 60 + hours * 60 * 60
     return output
+
+
+def move_files(source_path, target_path, max_items=-1, verbose=0):
+    if os.path.isdir(target_path):
+        idx = 0
+        for image_name in os.listdir(source_path):
+            full_source_path = os.path.join(source_path, image_name)
+            if os.path.isfile(full_source_path):
+                if max_items >= 0:
+                    if idx >= max_items:
+                        break
+                shutil.move(full_source_path, target_path)
+                if verbose == 1:
+                    print(f"moved: {idx}/{max_items}    path: {full_source_path}")
+                idx += 1

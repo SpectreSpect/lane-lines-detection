@@ -50,13 +50,31 @@ class DataGenerator():
 
 
     def generate(self, input_images_path: str, output_labels_path: str):
-        image_dict = self.load_images(input_images_path, max_images_count=2) # DON'T FORGET TO REMOVE THIS 2
+        image_dict = self.load_images(input_images_path)
         images = image_dict["images"]
         image_names = image_dict["names"]
 
         results = self.model.predict(images, verbose=False)
         self.generate_from_results(results, image_names, output_labels_path)
         # self.generate_from_result(results[0], os.path.join(output_labels_path, "test.txt"))
+
+
+def image_batch_generator(folder_path, batch_size=128):
+    image_names = os.listdir(folder_path)
+    
+    start_index = 0
+    while start_index < len(image_names):
+        end_index = min(start_index + batch_size - 1, len(image_names) - 1)
+        
+        batch = []
+        for i in range(start_index, end_index + 1):
+            image_path = os.path.join(folder_path, image_names[i])
+            image = np.asarray(Image.open(image_path))
+            batch.append(image)
+        
+        yield batch, image_names[start_index:(end_index + 1)]
+
+        start_index = end_index + 1
 
 
     # def save_yolo_labels(model: YOLO, images, image_names):
