@@ -714,3 +714,13 @@ def move_files(source_path, target_path, max_items=-1, verbose=0):
                 if verbose == 1:
                     print(f"moved: {idx}/{max_items}    path: {full_source_path}")
                 idx += 1
+
+
+def float_seconds_to_time_str(seconds, decimal_places_to_round_to):
+    if seconds < 60.0:
+        time = f"{round(seconds, decimal_places_to_round_to)} seconds"
+    elif seconds / 60.0 < 60.0:
+        time = f"{round(seconds / 60.0, decimal_places_to_round_to)} minutes"
+    else:
+        time = f"{round((seconds / 60.0) / 60.0, decimal_places_to_round_to)} hours"
+    return time
