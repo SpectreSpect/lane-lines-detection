@@ -4,6 +4,7 @@ from PIL import Image
 import numpy as np
 from timeit import default_timer as timer
 from src.utils import *
+from src.from_xml_to_yolo import *
 
 
 class DataGenerator():
@@ -101,8 +102,11 @@ class DataGenerator():
             yield batch, image_names[start_index:(end_index + 1)]
 
             start_index = end_index + 1
-
-
+        
+    @staticmethod
+    def merge_cvat_images_to_yolo(yolo_labels_path: str, cvat_labels_path: str):
+        cvat_box_batches = get_boxes_from_image_cvat(cvat_labels_path)
+        BoundingBox.batches_to_yolo(cvat_box_batches, yolo_labels_path)
 
 
 

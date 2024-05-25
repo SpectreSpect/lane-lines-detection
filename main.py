@@ -41,7 +41,33 @@ if __name__ == "__main__":
     model = YOLO("models/robolife-detection-yolov8l-seg/model.pt")
     model.to("cuda")
 
-    data_generator = DataGenerator(model)
-    data_generator.generate("data/yolov8-new-data1-val015-fmasks/images/train", 
-                            "data/new-data-lables/train", 10)
+    class_names = model.names
+    for key in class_names:
+        print(f"Class {key}: {class_names[key]}")
+    
+    image = cv2.imread("data/yolov8-new-data1-val015-fmasks/images/train/00f929d2-69da-45d3-ab8e-aa9c5b1d1a10.jpg")
+
+
+    bounding_boxes = BoundingBox.from_yolo("tmp/00f929d2-69da-45d3-ab8e-aa9c5b1d1a10.txt")
+    for box in bounding_boxes:
+        box.draw_on_image(image, class_names)
+
+    
+    cv2.imshow('Loaded Image', image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    # data_generator = DataGenerator(model)
+    # data_generator.generate("data/yolov8-new-data1-val015-fmasks/images/train", 
+    #                         "data/new-data-lables/train", 10)
+    
+    # plastic_drum_images_path = ""
+    # plastic_drum_labels_output_path = ""
+    # data_generator.generate(plastic_drum_images_path, 
+    #                         plastic_drum_labels_output_path, 10)
+    # cvat_labels_path = ""
+    # data_generator.merge_cvat_images_to_yolo(plastic_drum_labels_output_path, cvat_labels_path)
+
+    
+    
 

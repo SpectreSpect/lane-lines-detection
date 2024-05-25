@@ -46,6 +46,24 @@ class BoundingBox():
         self.width = width
         self.height = height
         self.image_name = image_name
+
+
+    @staticmethod
+    def from_yolo(path: str) -> list:
+        bounding_boxes = []
+        with open(path, 'r') as file:
+            lines = file.readlines()
+            for line in lines:
+                matches = re.findall(r'\b\d+\.\d+|\b\d+', line)
+                label = int(matches[0])
+                x = float(matches[1])
+                y = float(matches[2])
+                width = float(matches[3])
+                height = float(matches[4])
+
+                bouding_box = BoundingBox(label, x, y, width, height)
+                bounding_boxes.append(bouding_box)
+        return bounding_boxes
     
 
     @staticmethod
@@ -65,6 +83,35 @@ class BoundingBox():
             image_name = boxes[0].image_name
             path = os.path.join(output_file_path, image_name) + ".txt"
             BoundingBox.boxes_to_yolo(boxes, path)
+    
+
+    def draw_on_image(self, image, label_names):
+        height, width, channels = image.shape
+
+        color = (200, 150, 150)
+
+        point_tl = (int((self.x - self.width / 2) * width), 
+                    int((self.y - self.height / 2)  * height)) 
+        
+        point_br = (int((self.x + self.width / 2) * width),
+                    int((self.y + self.height / 2) * height))
+        
+
+        text_bar_height = 30
+
+        text_point_tl = (point_tl[0],
+                         int(point_tl[1] - text_bar_height))
+        
+        text_point_br = (int((point_tl[0] + point_br[0]) / 2), int(point_tl[1]))
+
+        cv2.rectangle(image, point_tl, point_br, color, 3)
+        cv2.rectangle(image, text_point_tl, text_point_br, color, -1)
+
+        text_position = (text_point_tl[0] + 5, text_point_br[1] - 5)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(image, label_names[self.label], text_position, font, 0.8, (255, 255, 255), 1, cv2.LINE_AA)
+
+
 
 
 class LaneLine():
