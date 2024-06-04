@@ -3,3 +3,4 @@ venv/
 tmp/
 models/
 runs/
+__pycache__/

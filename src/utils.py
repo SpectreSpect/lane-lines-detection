@@ -418,7 +418,8 @@ def paint_str(string: str, color):
     # print(text.format(color[0], color[1], color[2]))
 
 
-def view_prediction_video(model, src, label_names=[], save_predictions=False, verbose=0):
+def view_prediction_video(model, src, label_names=[], resized_width=-1, save_predictions=False, verbose=0, 
+                          start_frame_callback=None, end_frame_callback=None, max_frames=-1):
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
         print("Не удалось открыть файл.")
@@ -439,19 +440,28 @@ def view_prediction_video(model, src, label_names=[], save_predictions=False, ve
     ret_images = []
     ret_predictions = []
 
+    frame = 0
     while cap.isOpened():
         ret, image = cap.read()
         if not ret:
             break
+
+        if max_frames > 0 and frame >= max_frames:
+            break
+
+        if start_frame_callback is not None:
+            start_frame_callback()
+
+        if resized_width > 0:
+            resized_height = image.shape[0] / image.shape[1] * resized_width
+            image = cv2.resize(image, (int(resized_width), int(resized_height)))
         
         if verbose != 0:
             print(f"id: {i}")
 
         # Обработка изображения
         start = timer()
-        predictions = model.model.predict([image], verbose=False)
-        mask_batches = model.predict_masks([image])
-        batch_lines = model.get_lines(mask_batches)
+        batch_lines, mask_batches, predictions = model.predict([image])
         end = timer()
 
         if save_predictions:
@@ -499,11 +509,15 @@ def view_prediction_video(model, src, label_names=[], save_predictions=False, ve
 
         cv2.imshow('prediction video', image)
 
+        if end_frame_callback is not None:
+            end_frame_callback()
+
         key_code = cv2.waitKey(5) & 0xFF
         if key_code == ord('q'):
             break
         
         i += 1
+        frame += 1
     
     cap.release()
     return ret_images, ret_predictions

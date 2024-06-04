@@ -10,9 +10,7 @@ from src.dataset_balancing import *
 from src.reinforcement_data import *
 from src.from_xml_to_yolo import *
 import re
-# import torch
-# from torchvision import datasets, transforms
-# from torch.utils.data import DataLoader
+import time
 
 
 def load_image(path: str):
@@ -38,36 +36,44 @@ def load_images(path: str, max_images_count=-1) -> list:
 
 
 if __name__ == "__main__":
-    model = YOLO("models/robolife-detection-yolov8l-seg/model.pt")
-    model.to("cuda")
+    model = LaneLineModel("models/data-openlane-vs02-e50/model.pt")
 
-    class_names = model.names
-    for key in class_names:
-        print(f"Class {key}: {class_names[key]}")
+    x_data = []
+    y_data = []
+
+    n_frame = [0]
+    start_time = time.time()
+
+    def start_frame_callback():
+        global start_frame_time
+        start_frame_time = time.time()
     
-    image = cv2.imread("data/yolov8-new-data1-val015-fmasks/images/train/00f929d2-69da-45d3-ab8e-aa9c5b1d1a10.jpg")
+    def end_frame_callback():
+        end_frame_time = time.time()
+        
+        frame_time = end_frame_time - start_frame_time 
+        
+        x_data.append(n_frame[0])
+        y_data.append(frame_time)
+        n_frame[0] += 1
 
+    view_prediction_video(model, 
+                          "data/videos/road-video-yellow-solid.mp4", 
+                          get_label_names("config.yaml"), 
+                          1000, 
+                          start_frame_callback=start_frame_callback, 
+                          end_frame_callback=end_frame_callback,
+                          max_frames=200)
 
-    bounding_boxes = BoundingBox.from_yolo("tmp/00f929d2-69da-45d3-ab8e-aa9c5b1d1a10.txt")
-    for box in bounding_boxes:
-        box.draw_on_image(image, class_names)
+    y_data = np.array(y_data)
 
-    
-    cv2.imshow('Loaded Image', image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    y_mean = y_data.mean()
+    y_std = y_data.std()
 
-    # data_generator = DataGenerator(model)
-    # data_generator.generate("data/yolov8-new-data1-val015-fmasks/images/train", 
-    #                         "data/new-data-lables/train", 10)
-    
-    # plastic_drum_images_path = ""
-    # plastic_drum_labels_output_path = ""
-    # data_generator.generate(plastic_drum_images_path, 
-    #                         plastic_drum_labels_output_path, 10)
-    # cvat_labels_path = ""
-    # data_generator.merge_cvat_images_to_yolo(plastic_drum_labels_output_path, cvat_labels_path)
-
-    
-    
-
+    print(float(np.array(y_data).mean()) * 1000)
+    plt.plot(x_data, y_data)
+    plt.ylim(y_mean - y_std, y_mean + y_std)
+    plt.xlabel("Номер кадра")
+    plt.ylabel("Время, мс.")
+    plt.title("График времени предсказания")
+    plt.show()

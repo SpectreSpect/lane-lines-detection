@@ -13,6 +13,8 @@ from collections.abc import Iterable
 class LaneLineModel:
     def __init__(self, path: str, use_curve_line=True):
         self.model = YOLO(path)
+        if torch.cuda.is_available():
+            self.model.to('cuda')
         self.use_curve_line = use_curve_line
     
     def get_lines(self, mask_batches, subtitutions: list = None):
@@ -44,12 +46,12 @@ class LaneLineModel:
     def predict_masks(self, images):
         results = self.model.predict(images, verbose=False)
         mask_batches = LaneMask.from_predictions(results)
-        return mask_batches
+        return mask_batches, results
 
     def predict(self, images):
-        mask_batches = self.predict_masks(images)
+        mask_batches, results = self.predict_masks(images)
         lines = self.get_lines(mask_batches)
-        return lines
+        return lines, mask_batches, results
     
     def generate_prediction_plots_yolo(self, images):
         results = self.model.predict(images, verbose=False)
@@ -57,7 +59,7 @@ class LaneLineModel:
         return plot_images
     
     def generate_prediction_plots(self, images):
-        mask_batches = self.predict_masks(images)
+        mask_batches, _ = self.predict_masks(images)
         batch_lines = self.get_lines(mask_batches)
 
         images_to_draw = np.copy(images)
