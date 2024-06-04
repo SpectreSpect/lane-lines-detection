@@ -785,3 +785,21 @@ def float_seconds_to_time_str(seconds, decimal_places_to_round_to):
     else:
         time = f"{round((seconds / 60.0) / 60.0, decimal_places_to_round_to)} hours"
     return time
+
+
+def get_shared_names(files_folder1: str, files_folder2: str):
+    folder1_names = os.listdir(files_folder1)
+    folder2_names = os.listdir(files_folder2)
+
+    folder1_names_set = set([os.path.splitext(filename)[0] for filename in os.listdir(files_folder1)])
+    folder2_names_set = set([os.path.splitext(filename)[0] for filename in os.listdir(files_folder2)])
+
+    shared_names = folder1_names_set.intersection(folder2_names_set)
+
+    folder1_names = [filename for filename in folder1_names if os.path.splitext(filename)[0] in shared_names]
+    folder2_names = [filename for filename in folder2_names if os.path.splitext(filename)[0] in shared_names]
+
+    folder1_names.sort()
+    folder2_names.sort()
+    
+    return [folder1_names, folder2_names]
