@@ -124,11 +124,13 @@ class LaneLine():
 
 
 class LaneMask():
-    def __init__(self, points: np.ndarray = [], points_n: np.ndarray = [], label: int = [], orig_shape: np.ndarray = None):
+    def __init__(self, points: np.ndarray = [], points_n: np.ndarray = [], label: int = [], orig_shape: np.ndarray = None, 
+                 image_name: str = None):
         self.points = points
         self.label = label
         self.orig_shape = orig_shape
         self.points_n = points_n
+        self.image_name = image_name
 
 
     @staticmethod
@@ -194,7 +196,7 @@ class LaneMask():
                 mask_batches[-1].append(lane_mask)
         return mask_batches
     
-
+    @staticmethod
     def from_file(file_path: str, orig_shape = None, image: np.ndarray = None, image_path: str = None) -> list:
         masks = []
         with open(file_path, 'r') as file:
@@ -228,8 +230,9 @@ class LaneMask():
                     points[:, 0] *= shape[1]
                     points[:, 1] *= shape[0]
                 # points = np.array(points, dtype=int)
-
-                lane_mask = LaneMask(points, points_n, label, shape)
+                
+                image_name = os.path.basename(file_path)[0]
+                lane_mask = LaneMask(points, points_n, label, shape, image_name=image_name)
                 masks.append(lane_mask)
         return masks
     
