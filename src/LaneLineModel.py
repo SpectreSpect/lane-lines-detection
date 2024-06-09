@@ -73,4 +73,14 @@ class LaneLineModel:
         plot_images = self.generate_prediction_plots_yolo(images) if yolo_vis else self.generate_prediction_plots(images)
         show_images(plot_images)
         return plot_images
+
+    def visualize_prediction_cv(self, image):
+        lines, mask_batches, results = self.predict([image])
+        draw_segmentation([image], mask_batches)
+        draw_lines([image], lines)
+        # draw_labels([image], mask_batches, label_names)
+
+        cv2.imshow("Image", image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
         
