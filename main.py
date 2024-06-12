@@ -179,9 +179,6 @@ if __name__ == "__main__":
 
    # draw_line(image, traced_line, (255, 100, 100))
 
-   
-   
-   
 
    cv2.imshow("Image", image)
    cv2.waitKey(0)
