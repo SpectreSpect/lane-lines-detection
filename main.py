@@ -13,9 +13,9 @@
 # import re
 # import time
 from src.converter.containers import ExplicitImageContainer
+from src.converter.data import Mask
 
 
 if __name__ == "__main__":
     image_container = ExplicitImageContainer("data/rm-dataset/images/images/Screenshot 2024-06-13 095752.png")
-    image_container.save_image("tmp/")
-    
+    mask = Mask([], 5, image_container, False) # why does the "points" argument has the "any" type?
