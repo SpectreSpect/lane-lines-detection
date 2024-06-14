@@ -6,5 +6,6 @@ class ImageContainer:
     def get_image(self) -> np.array:
         pass
     
+    @abstractmethod
     def save_image(self, path: str) -> np.array:
         pass

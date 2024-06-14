@@ -14,8 +14,8 @@
 # import time
 from src.converter.containers import ExplicitImageContainer
 from src.converter.data import Mask
+from src.converter.core import Core
 
 
 if __name__ == "__main__":
-    image_container = ExplicitImageContainer("data/rm-dataset/images/images/Screenshot 2024-06-13 095752.png")
-    mask = Mask([], 5, image_container, False) # why does the "points" argument has the "any" type?
+    core = Core("data/rm-dataset", "cvat-image")
