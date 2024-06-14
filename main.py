@@ -15,7 +15,9 @@
 from src.converter.containers import ExplicitImageContainer
 from src.converter.data import Mask
 from src.converter.core import Core
+import os
 
 
 if __name__ == "__main__":
     core = Core("data/rm-dataset", "cvat-image")
+    core.export("data/test-yolo-export", "yolo", 0)
