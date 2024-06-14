@@ -1,0 +1,8 @@
+path: you_should_specify_the_path_to_the_dataset
+train: images\train
+val: images\val
+
+nc: 2
+names:
+- crosswalk
+- stop-line
