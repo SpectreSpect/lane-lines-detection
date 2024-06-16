@@ -12,13 +12,23 @@ from src.from_xml_to_yolo import *
 from src.dataset import YoloImageDataset
 import re
 import time
-
+from src.predictions.Predictor import Predictor
+from src.IPMTransformator import IPMTransformator
 
 if __name__ == "__main__":
-    test_dataset = YoloImageDataset.create_dataset("tmp/test-dataset", 
-                                                   "tmp/test-images", "tmp/test-labels", 
-                                                #    label_name_list=["double-dash", "some-label", "hello"],
-                                                   config_path="config.yaml",
-                                                   validation_split=0.2)
+    model = LaneLineModel(r"models\LLD-level-5-v2\model.pt")
+    ipm_transformator = IPMTransformator("ipm_config.yaml")
 
-    # model = LaneLineModel("models/LLD-2.pt")
+    predictor = Predictor(model, ipm_transformator)
+    predictor.start(r"data\videos\level-5-video.mp4", 1280)
+
+    # from_cvat_to_yolo(output_images_folder=r"data\level-5-dataset\Segment 3\images\train", 
+    #                   output_labels_folder=r"data\level-5-dataset\Segment 3\labels\train",
+    #                   label_names=get_label_names(r"config.yaml"),
+    #                   input_video_path=r"data\videos\segments\Segment 3\segment-3.mp4",
+    #                   xml_path=r"data\videos\segments\Segment 3\annotations.xml")
+    # save_plotted_video(model,
+    #                    r"data\videos\level-5-video-6x - Made with Clipchamp.mp4",
+    #                    r"data\videos\plotted-level-5-video.mp4",
+    #                    get_label_names("config.yaml"))
+    #view_prediction_video(model, r"data\videos\road-video-yellow-solid.mp4", get_label_names("config.yaml"), 1280, 1)

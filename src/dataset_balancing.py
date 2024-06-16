@@ -189,8 +189,7 @@ def save_plotted_video(model: LaneLineModel, src_video_path: str, output_path: s
 
         if frame % fps_n == 0:
             # predictions = model.model.predict([image], verbose=False)
-            mask_batches = model.predict_masks([image])
-            batch_lines = model.get_lines(mask_batches)
+            batch_lines, mask_batches, predictions = model.predict([image])
             
 
             # mask_batches = LaneMask.from_predictions(predictions, tolerance=0)

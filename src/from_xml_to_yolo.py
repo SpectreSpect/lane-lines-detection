@@ -134,11 +134,14 @@ def get_video_shape(video_path: str) -> list:
     return [width, height]
 
 
-def from_cvat_to_yolo(output_images_folder: str, output_labels_folder: str, label_names: list, 
+def from_cvat_to_yolo(output_images_folder: str, 
+                      output_labels_folder: str, 
+                      label_names: list, 
                       input_video_path: str = None, 
                       xml_path: str = None, 
                       input_labels_path: str = None,
-                      input_videos_path: str = None, verbose=1):
+                      input_videos_path: str = None, 
+                      verbose=1):
     if (input_labels_path is not None) and (input_videos_path is not None):
         # label_file_names = get_file_names(input_labels_path)
         video_file_names = get_file_names(input_videos_path)

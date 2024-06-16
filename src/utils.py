@@ -8,6 +8,7 @@ import time
 import os
 import re
 import shutil
+from src.temporal_coherence import *
 
 # default_palette = [
 #     (255, 0, 0),
@@ -115,10 +116,17 @@ class BoundingBox():
 
 
 class LaneLine():
-    def __init__(self, points: np.ndarray, label: int, points_n: np.ndarray = [], elapsed_time=0, mask_count_points=0):
+    def __init__(self, 
+                 points: np.ndarray, 
+                 label: int, 
+                 points_n: np.ndarray = [], 
+                 bounding_box: np.ndarray = [],
+                 elapsed_time=0, 
+                 mask_count_points=0):
         self.points = points
         self.points_n = points_n
         self.label = label
+        self.bounding_box = bounding_box
         self.elapsed_time = elapsed_time
         self.mask_count_points=mask_count_points
 
@@ -157,7 +165,7 @@ class LaneMask():
             return None
 
         # shape = (shape[1], shape[0])
-
+#cv2.line(np.zeros((int(shape[1]), int(shape[0]), 1), dtype=np.uint8), (0, 0), (0, 0), color=(255, 255, 255), thickness=20)
         image = np.zeros((int(shape[1]), int(shape[0]), 1), dtype=np.uint8)
         
         if line.points.shape[0] == 1:
@@ -418,17 +426,22 @@ def paint_str(string: str, color):
     # print(text.format(color[0], color[1], color[2]))
 
 
-def view_prediction_video(model, src, label_names=[], resized_width=-1, save_predictions=False, verbose=0, 
+def view_prediction_video(model, src, label_names=[], resized_width=-1, skip_seconds=10, save_predictions=False, verbose=0, 
                           start_frame_callback=None, end_frame_callback=None, max_frames=-1):
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
         print("Не удалось открыть файл.")
         cap.release()
         return
+    
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     mean_hertz = 0
     mean_elapsed_time = 0
     i = 0
+
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    skip_frames = fps * skip_seconds
 
     count_tests = 500
     mean_elapsed_time = 0
@@ -451,10 +464,6 @@ def view_prediction_video(model, src, label_names=[], resized_width=-1, save_pre
 
         if start_frame_callback is not None:
             start_frame_callback()
-
-        if resized_width > 0:
-            resized_height = image.shape[0] / image.shape[1] * resized_width
-            image = cv2.resize(image, (int(resized_width), int(resized_height)))
         
         if verbose != 0:
             print(f"id: {i}")
@@ -507,6 +516,14 @@ def view_prediction_video(model, src, label_names=[], resized_width=-1, save_pre
         draw_lines([image], batch_lines)
         draw_labels([image], mask_batches, label_names)
 
+        # for line in batch_lines[0]:
+        #     if len(line.bounding_box) > 0:
+        #         cv2.rectangle(image, line.bounding_box[0].astype(int), line.bounding_box[1].astype(int), (255, 0, 0), 2)
+        
+        if resized_width > 0:
+            resized_height = image.shape[0] / image.shape[1] * resized_width
+            image = cv2.resize(image, (int(resized_width), int(resized_height)))
+
         cv2.imshow('prediction video', image)
 
         if end_frame_callback is not None:
@@ -515,9 +532,19 @@ def view_prediction_video(model, src, label_names=[], resized_width=-1, save_pre
         key_code = cv2.waitKey(5) & 0xFF
         if key_code == ord('q'):
             break
-        
+
         i += 1
         frame += 1
+
+        if key_code == ord('b'):
+            frame = max(0, frame - skip_frames)
+            i = max(0, i - skip_frames)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
+
+        if key_code == ord('n'):
+            frame = min(frame + skip_frames, total_frames - 1)
+            i = min(i + skip_frames, total_frames - 1)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
     
     cap.release()
     return ret_images, ret_predictions
@@ -552,8 +579,21 @@ def get_straight_lines(mask_batches):
                         max_lenght = lenght
                         best_line = line
 
+                points = np.reshape(np.array(list(best_line), dtype=np.int32), (2, 2))
+                n_poitns = points / np.array(masks[0].orig_shape[:2])[::-1]
+                
+                left_top_point = np.array([min(points[0][0], points[1][0]), min(points[0][1], points[1][1])], dtype=np.uint8)
+                right_bottom_point = np.array([max(points[0][0], points[1][0]), max(points[0][1], points[1][1])], dtype=np.uint8)
+                bounding_box = np.array([left_top_point, right_bottom_point], dtype=np.int32)
+
                 t2 = time.time()
-                mask_lines.append(LaneLine(np.reshape(np.array(list(best_line), dtype=np.int32), (2, 2)), int(mask.label), t2-t1, int(mask.points.shape[0])))
+                mask_lines.append(LaneLine(
+                    points,
+                    int(mask.label),
+                    n_poitns,
+                    bounding_box,
+                    t2-t1, 
+                    int(mask.points.shape[0])))
             
             mask_image[:] = 0
         batch_lines.append(mask_lines)
@@ -710,6 +750,11 @@ def get_line_contour(
         moving_point1_id = start_point1_id
         moving_point2_id = start_point2_id
 
+        left_top_point = np.array([min(points[moving_point1_id][0], points[moving_point2_id][0]), 
+                                   min(points[moving_point1_id][1], points[moving_point2_id][1])])
+        
+        right_bottom_point = np.array([max(points[moving_point1_id][0], points[moving_point2_id][0]), 
+                                       max(points[moving_point1_id][1], points[moving_point2_id][1])])
 
         line = [(points[moving_point1_id] + points[moving_point2_id]) / 2]
         back_line = []
@@ -721,6 +766,13 @@ def get_line_contour(
                 moving_point1_id = (moving_point1_id + dir) % points.shape[0]
                 moving_point2_id = correct_point(points, moving_point1_id, moving_point2_id, max_distance, dist_accum_factor, n_accum, [-dir])
 
+                for moving_point in [points[moving_point1_id], points[moving_point2_id]]:
+                    left_top_point = np.array([min(left_top_point[0], moving_point[0]), 
+                                               min(left_top_point[1], moving_point[1])])
+                    
+                    right_bottom_point = np.array([max(right_bottom_point[0], moving_point[0]), 
+                                                   max(right_bottom_point[1], moving_point[1])])
+
                 if moving_point2_id == -1:
                     break
                 else:
@@ -730,7 +782,15 @@ def get_line_contour(
                         line = [(points[moving_point1_id] + points[moving_point2_id]) / 2] + line
         
         t2 = time.time()
-        mask_lines.append(LaneLine(np.array(line, dtype=np.int32), mask.label, t2-t1, len(line)))
+
+        lane_line_points = np.array(line, dtype=np.int32)
+        lane_line_poins_n = np.array(lane_line_points, dtype=np.float32) / np.array(mask.orig_shape)[::-1]
+        mask_lines.append(LaneLine(lane_line_points,
+                                   mask.label,
+                                   lane_line_poins_n,
+                                   np.array([left_top_point, right_bottom_point], dtype=np.int32),
+                                   t2-t1,
+                                   len(line)))
 
     return mask_lines
         

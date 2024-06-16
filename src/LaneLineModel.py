@@ -3,7 +3,6 @@ from ultralytics import YOLO
 import matplotlib.pyplot as plt
 import yaml
 import numpy as np
-import cv2
 from src.utils import *
 from src.utiles_for_test import *
 import os
