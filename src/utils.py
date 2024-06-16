@@ -806,3 +806,17 @@ def get_shared_names(files_folder1: str, files_folder2: str):
     folder2_names.sort()
     
     return [folder1_names, folder2_names]
+
+
+def show_bbox_yolo_dataset(image_path: str, label_path: str):
+
+    image = cv2.imread(image_path)
+    
+    label_names = [str(i) for i in range(500)]
+    bboxes = BoundingBox.from_yolo(label_path)
+    for bbox in bboxes:
+        bbox.draw_on_image(image, label_names)
+    
+    cv2.imshow("Image", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
