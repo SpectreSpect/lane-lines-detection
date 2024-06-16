@@ -6,6 +6,7 @@ import re
 from ..data import Mask
 from ..containers import ExplicitImageContainer
 from ..data.annotation import Annotation
+from ..data.annotation_bundle import AnnotationBundle
 from typing import List
 
 
@@ -13,8 +14,8 @@ class CvatImageHandler(DataHandler):
     def __init__(self):
         pass
     
-    def load(self, path: str) -> List[Annotation]:
-        annotations: List[Annotation] = []
+    def load(self, path: str) -> List[AnnotationBundle]:
+        annotation_bundels: List[AnnotationBundle] = []
         
         annotation_file_path = os.path.join(path, "annotations.xml")
         images_path = os.path.join(path, "images")
@@ -41,10 +42,9 @@ class CvatImageHandler(DataHandler):
             image_shape = np.array([width, height])
             
             image_path = os.path.join(path, "images", image_element.attrib['name'])
-            # image_path = os.path.join(path, image_element.attrib['name'])
-            # print("YOU SHOULD OPEN cvat_image_handler.py AND CHANGE THE LINE ABOVE THIS PRINT!!!!!")
             
             image_container = ExplicitImageContainer(image_path)
+            annotations: List[Annotation] = []
 
             polygon_elements = image_element.findall('.//polygon')
             for polygon_element in polygon_elements:
@@ -61,7 +61,9 @@ class CvatImageHandler(DataHandler):
                 
                 mask = Mask(points, label, image_container, False)
                 annotations.append(mask)
-        return annotations
+            annotation_bundle = AnnotationBundle(annotations, image_container)
+            annotation_bundels.append(annotation_bundle)
+        return annotation_bundels
     
     def save(self, path: str, validation_split: int):
         pass

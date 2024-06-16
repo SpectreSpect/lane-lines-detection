@@ -9,9 +9,9 @@ class Core():
         self._dataset_format = dataset_format
         
         handler = DataHandlerFactory.create_handler(dataset_format)
-        self._annotations = handler.load(dataset_path)
+        self._annotation_bundles = handler.load(dataset_path)
     
-    def export(self, output_path, dataset_format: str, validation_split: float):
+    def export(self, output_path: str, dataset_format: str, validation_split: float):
         handler = DataHandlerFactory.create_handler(dataset_format)
-        handler.save(self._annotations, output_path, validation_split)
+        handler.save(self._annotation_bundles, output_path, validation_split)
         

@@ -20,4 +20,4 @@ import os
 
 if __name__ == "__main__":
     core = Core("data/rm-dataset", "cvat-image")
-    core.export("data/test-yolo-export", "yolo", 0)
+    core.export("data/test-yolo-export", "yolo", 0.2)
