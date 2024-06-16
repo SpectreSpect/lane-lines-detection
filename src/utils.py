@@ -132,11 +132,13 @@ class LaneLine():
 
 
 class LaneMask():
-    def __init__(self, points: np.ndarray = [], points_n: np.ndarray = [], label: int = [], orig_shape: np.ndarray = None):
+    def __init__(self, points: np.ndarray = [], points_n: np.ndarray = [], label: int = [], orig_shape: np.ndarray = None, 
+                 image_name: str = None):
         self.points = points
         self.label = label
         self.orig_shape = orig_shape
         self.points_n = points_n
+        self.image_name = image_name
 
 
     @staticmethod
@@ -202,7 +204,7 @@ class LaneMask():
                 mask_batches[-1].append(lane_mask)
         return mask_batches
     
-
+    @staticmethod
     def from_file(file_path: str, orig_shape = None, image: np.ndarray = None, image_path: str = None) -> list:
         masks = []
         with open(file_path, 'r') as file:
@@ -236,8 +238,9 @@ class LaneMask():
                     points[:, 0] *= shape[1]
                     points[:, 1] *= shape[0]
                 # points = np.array(points, dtype=int)
-
-                lane_mask = LaneMask(points, points_n, label, shape)
+                
+                image_name = os.path.basename(file_path)[0]
+                lane_mask = LaneMask(points, points_n, label, shape, image_name=image_name)
                 masks.append(lane_mask)
         return masks
     
@@ -863,3 +866,17 @@ def get_shared_names(files_folder1: str, files_folder2: str):
     folder2_names.sort()
     
     return [folder1_names, folder2_names]
+
+
+def show_bbox_yolo_dataset(image_path: str, label_path: str):
+
+    image = cv2.imread(image_path)
+    
+    label_names = [str(i) for i in range(500)]
+    bboxes = BoundingBox.from_yolo(label_path)
+    for bbox in bboxes:
+        bbox.draw_on_image(image, label_names)
+    
+    cv2.imshow("Image", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()

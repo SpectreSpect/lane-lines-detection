@@ -2,10 +2,25 @@ import os
 import yaml
 import shutil
 from src.utils import get_shared_names
+import numpy as np
+from PIL import Image
+from src.utils import *
 
 
 class Dataset():
     def __init__(self):
+        pass
+
+    def get_size(self) -> int:
+        pass
+
+    def get(self, idx: int) -> int:
+        pass
+
+    def next(self, batch_size: int):
+        pass
+
+    def flow(self):
         pass
 
 
@@ -14,7 +29,64 @@ class ImageDataset(Dataset):
         pass
 
 
-class YoloImageDataset(ImageDataset):
+class ImagesFolderDataset(Dataset):
+    def __init__(self, folder_path: str, batch_size: int = 128):
+        self.folder_path = folder_path
+        self.image_names = os.listdir(self.folder_path)
+        self.size = len(self.image_names)
+        self.batch_size = batch_size
+    
+    def __len__(self):
+        return self.size
+    
+    def flow(self):    
+        start_index = 0
+        while start_index < len(self.image_names):
+            end_index = min(start_index + self.batch_size - 1, len(self.image_names) - 1)
+            
+            batch = []
+            for i in range(start_index, end_index + 1):
+                image_path = os.path.join(self.folder_path, self.image_names[i])
+                image = np.asarray(Image.open(image_path))
+                batch.append(image)
+            
+            yield [batch, self.image_names[start_index:(end_index + 1)]]
+
+            start_index = end_index + 1
+
+
+class LabelDataset(Dataset):
+    def __init__(self):
+        pass
+
+
+class YoloSegLabelsFolderDataset(LabelDataset):
+    def __init__(self, folder_path: str, batch_size: int = 128):
+        self.folder_path = folder_path
+        self.label_names = os.listdir(self.folder_path)
+        self.size = len(self.label_names)
+        self.batch_size = batch_size
+    
+    def __len__(self):
+        return self.size
+    
+    def flow(self):    
+        start_index = 0
+        while start_index < len(self.label_names):
+            end_index = min(start_index + self.batch_size - 1, len(self.label_names) - 1)
+            
+            batch = []
+            for i in range(start_index, end_index + 1):
+                label_path = os.path.join(self.folder_path, self.label_names[i])
+                masks = LaneMask.from_file(label_path)
+                batch.append(masks)
+            
+            yield batch
+
+            start_index = end_index + 1
+
+
+class YoloImageDataset(Dataset):
     def __init__(self, dataset_path: str,
                  save_dataset: bool = False,
                  input_images_path: str = None, input_labels_path: str = None,
@@ -90,7 +162,8 @@ class YoloImageDataset(ImageDataset):
             idx += 1
 
         return output_dataset
-    
+
+
     @staticmethod
     def create_config(output_config_path: str, label_name_list: list,
                       output_datset_path: str = "", 
@@ -105,3 +178,25 @@ class YoloImageDataset(ImageDataset):
                 }
                 yaml.dump(yaml_dict, file)
 
+
+class LabelDataset(Dataset):
+    def __init__(self):
+        pass
+
+    def get_size(self) -> int:
+        pass
+
+    def get(self, idx: int) -> int:
+        pass
+
+    def next(self, batch_size: int):
+        pass
+
+
+class CvatImageLabelDataset(LabelDataset):
+    def __init__(self, file_path):
+
+        pass
+
+    def get_size(self) -> int:
+        pass

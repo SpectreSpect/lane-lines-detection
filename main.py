@@ -9,7 +9,7 @@ from src.utils import *
 from src.dataset_balancing import *
 from src.reinforcement_data import *
 from src.from_xml_to_yolo import *
-from src.dataset import YoloImageDataset
+from src.dataset import *
 import re
 import time
 from src.predictions.Predictor import Predictor
