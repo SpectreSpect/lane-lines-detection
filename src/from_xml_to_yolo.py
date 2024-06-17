@@ -173,3 +173,75 @@ def from_cvat_to_yolo(output_images_folder: str,
 
 def add_boxes_from_cvat_image(labels_path: str, cvat_xml_path: str):
     pass
+
+
+def cvat_image_labels_to_yolo(cvat_label_file: str, output_dir: str, label_names: list = None):
+    tree = ET.parse(cvat_label_file)
+    root = tree.getroot()
+
+    image_elements = root.findall('.//image')
+    
+    label2id = {lable_name: idx for idx, lable_name in enumerate(label_names)}
+
+    for image_element in image_elements:
+        width = int(image_element.attrib['width'])
+        height = int(image_element.attrib['height'])
+        
+        image_shape = np.array([width, height])
+
+        output_string = ""
+        polygon_elements = image_element.findall('.//polygon')
+        for polygon_element in polygon_elements:
+            points_str = polygon_element.attrib['points']
+            label = polygon_element.attrib['label']
+            if label_names is not None:
+                label = str(label2id[label])
+            
+            matches = re.findall(r'-?\d+\.\d+|-?\d+', points_str)
+            points = np.array([float(match) for match in matches])
+            points = points.reshape((-1, 2))
+            
+            points /= image_shape
+            
+            output_string += label
+            for point in points:
+                output_string += f" {str(abs(point[0]))} {str(abs(point[1]))}"
+            output_string += "\n"
+        
+        image_name = os.path.basename(os.path.splitext(image_element.attrib['name'])[0])
+        yolo_label_path = os.path.join(output_dir, image_name + ".txt")
+        
+        with open(yolo_label_path, 'w') as file:
+            file.write(output_string)
+    
+
+def from_cvat_images_to_yolo(image_dir: str, label_file_path: str, output_dir: str, config_path: str):
+    output_train_image_dir = os.path.join(output_dir, 'images', 'train')
+    output_valid_image_dir = os.path.join(output_dir, 'images', 'valid')
+    output_train_label_dir = os.path.join(output_dir, 'labels', 'train')
+    output_valid_label_dir = os.path.join(output_dir, 'labels', 'valid')
+    
+    os.makedirs(output_train_image_dir, exist_ok=True)
+    os.makedirs(output_valid_image_dir, exist_ok=True)
+    os.makedirs(output_train_label_dir, exist_ok=True)
+    os.makedirs(output_valid_label_dir, exist_ok=True)
+    
+    config_name = os.path.basename(config_path)
+    new_config_path = os.path.join(output_dir, config_name)
+    
+    shutil.copy2(config_path, new_config_path)
+    os.rename(new_config_path, os.path.join(output_dir, "config.yaml"))
+    
+    cvat_image_labels_to_yolo(label_file_path, output_train_label_dir, 
+                              label_names=get_label_names(config_path))
+    
+    image_names = os.listdir(image_dir)
+    for image_name in image_names:
+        image_path = os.path.join(image_dir, image_name)
+        if os.path.isfile(image_path):
+            destination_path = os.path.join(output_train_image_dir, image_name)
+            shutil.copy2(image_path, destination_path)
+    
+    
+    
+    
