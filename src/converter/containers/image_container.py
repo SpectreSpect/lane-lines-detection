@@ -12,6 +12,10 @@ class ImageContainer:
     @abstractmethod
     def get_image(self) -> np.array:
         pass
+
+    @abstractmethod
+    def get_image_shape(self) -> np.array:
+        pass
     
     @abstractmethod
     def save_image(self, path: str) -> np.array:

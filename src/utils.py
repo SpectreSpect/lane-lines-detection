@@ -868,8 +868,7 @@ def get_shared_names(files_folder1: str, files_folder2: str):
     return [folder1_names, folder2_names]
 
 
-def show_bbox_yolo_dataset(image_path: str, label_path: str):
-
+def show_bbox_yolo_dataset(image_path: str, label_path: str, resized_width=1280):
     image = cv2.imread(image_path)
     
     label_names = [str(i) for i in range(500)]
@@ -877,6 +876,9 @@ def show_bbox_yolo_dataset(image_path: str, label_path: str):
     for bbox in bboxes:
         bbox.draw_on_image(image, label_names)
     
+    resized_height = image.shape[0] / image.shape[1] * resized_width
+    image = cv2.resize(image, (int(resized_width), int(resized_height)))
+
     cv2.imshow("Image", image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

@@ -9,6 +9,7 @@ import shutil
 from typing import List
 from ..data.annotation import Annotation
 from ..data.annotation_bundle import AnnotationBundle
+from ..data.box import Box
 
 
 class YoloImageHandler(DataHandler):
@@ -37,8 +38,15 @@ class YoloImageHandler(DataHandler):
             output_str = ""
             for annotation in annotation_bundel.annotations: 
                 output_str += str(annotation.label)
-                for point in annotation.points:
-                    output_str += f" {point[0]} {point[1]}"
+                if isinstance(annotation, Box):
+                    points_n = annotation.points_n
+                    width, height = [points_n[1][0] - points_n[0][0], points_n[1][1] - points_n[0][1]]
+                    x, y = points_n[0] + np.array([width, height]) / 2
+                    output_str += f" {x} {y} {width} {height}"
+                else:
+                    for point in annotation.points_n:
+                        output_str += f" {point[0]} {point[1]}"
+
                 output_str += "\n"
                 
             image_name = annotation_bundel.image_container.image_name

@@ -15,9 +15,18 @@
 from src.converter.containers import ExplicitImageContainer
 from src.converter.data import Mask
 from src.converter.core import Core
+from src.converter.handlers.data_handler_factory import DataHandlerFactory
+from src.utils import show_bbox_yolo_dataset
 import os
 
 
 if __name__ == "__main__":
-    core = Core("data/rm-dataset", "cvat-image")
+    handler = DataHandlerFactory.create_handler("traffic-light-detection-dataset")
+    handler.min_side_size = 100
+
+    core = Core(r"data\traffic-light-detection-dataset\train_dataset", handler=handler)
     core.export("data/test-yolo-export", "yolo", 0.2)
+
+    # show_bbox_yolo_dataset(r"data\test-yolo-export\images\train\00003.jpg",
+    #                        r"data\test-yolo-export\labels\train\00003.txt")
+

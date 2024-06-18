@@ -57,9 +57,9 @@ class CvatImageHandler(DataHandler):
                 points = np.array([float(match) for match in matches])
                 points = points.reshape((-1, 2))
                 
-                points /= image_shape
+                points_n = points / image_shape
                 
-                mask = Mask(points, label, image_container, False)
+                mask = Mask(points, points_n, label, image_container, False)
                 annotations.append(mask)
             annotation_bundle = AnnotationBundle(annotations, image_container)
             annotation_bundels.append(annotation_bundle)
