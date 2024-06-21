@@ -16,17 +16,19 @@ from src.converter.containers import ExplicitImageContainer
 from src.converter.data import Mask
 from src.converter.core import Core
 from src.converter.handlers.data_handler_factory import DataHandlerFactory
-from src.utils import show_bbox_yolo_dataset
+from src.utils import *
 import os
 
 
 if __name__ == "__main__":
-    handler = DataHandlerFactory.create_handler("traffic-light-detection-dataset")
-    handler.min_side_size = 100
+    core = Core(r"data\datasets\sign-detection\rtsi\rtsi", "yolo")
+    bundels = core._annotation_bundles
 
-    core = Core(r"data\traffic-light-detection-dataset\train_dataset", handler=handler)
-    core.export("data/test-yolo-export", "yolo", 0.2)
+    core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "3_18_1", bundle.annotations)), bundels))
+    core.export(r"data\datasets\sign-detection\rtsi-3_18_1", "yolo", 0)
 
-    # show_bbox_yolo_dataset(r"data\test-yolo-export\images\train\00003.jpg",
-    #                        r"data\test-yolo-export\labels\train\00003.txt")
+    # core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "5_15_3", bundle.annotations)), bundels))
+    # core.export(r"data\datasets\sign-detection\rtsi-5_15_3", "yolo", 0)
 
+    # core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "5_15_5", bundle.annotations)), bundels))
+    # core.export(r"data\datasets\sign-detection\rtsi-5_15_5", "yolo", 0)

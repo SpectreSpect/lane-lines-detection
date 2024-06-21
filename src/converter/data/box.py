@@ -6,7 +6,7 @@ class Box(Annotation):
     def __init__(self,
                 points: np.ndarray, 
                 points_n: np.ndarray,
-                label: int, 
+                label: str, 
                 image_container: ExplicitImageContainer,
                 is_valid: bool):
         super().__init__(points, points_n, label, image_container, is_valid)

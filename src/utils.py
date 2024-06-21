@@ -9,6 +9,10 @@ import os
 import re
 import shutil
 from src.temporal_coherence import *
+from src.converter.data.annotation_bundle import AnnotationBundle
+from src.converter.data.mask import Mask
+from src.converter.data.annotation import Annotation
+from typing import List
 
 # default_palette = [
 #     (255, 0, 0),
@@ -878,6 +882,23 @@ def show_bbox_yolo_dataset(image_path: str, label_path: str, resized_width=1280)
     
     resized_height = image.shape[0] / image.shape[1] * resized_width
     image = cv2.resize(image, (int(resized_width), int(resized_height)))
+
+    cv2.imshow("Image", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+def show_segmentation(image: np.ndarray, annotations: List[Annotation], label_names: List[str], alpha=0.5):
+    label2id = {label: idx for idx, label in enumerate(label_names)}
+
+    mask_image = np.zeros_like(image)
+    for annotation in annotations:
+        color = default_palette[label2id[annotation.label] % len(default_palette) + 1]
+        cv2.drawContours(mask_image, [np.expand_dims(annotation.points, axis=1).astype(int)], contourIdx=-1, color=color, thickness=-1)
+    
+    indices = np.any(mask_image != np.array([0, 0, 0, 0], dtype=np.uint8), axis=-1)
+    image[indices] = cv2.addWeighted(image, 1-alpha, mask_image, alpha, 0)[indices]
+
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
     cv2.imshow("Image", image)
     cv2.waitKey(0)
