@@ -1,0 +1,9 @@
+path: tmp\test-dataset
+train: tmp\test-dataset\images\train
+val: tmp\test-dataset\labels\train
+
+nc: 15
+names:
+- "1_2"
+- "3_2"
+- "_2"
