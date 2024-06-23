@@ -99,7 +99,7 @@ class YoloImageHandler(DataHandler):
         config["path"] = os.path.join(os.getcwd(), path)
         config["train"] = r"images\train"
         config["val"] = r"images\val"
-        config["nc"] = 2
+        config["nc"] = len(label_names)
         config["names"] = label_names
 
         with open(config_path, "w", encoding='utf-8') as file:

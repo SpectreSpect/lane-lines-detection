@@ -1,5 +1,6 @@
 from .data_handler import DataHandler
 from .cvat_image_handler import CvatImageHandler
+from .cvat_video_handler import CvatVideoHandler
 from .yolo_image_handler import YoloImageHandler
 from .yolo_seg_image_handler import YoloSegImageHandler
 from .traffic_light_detection_dataset_handler import TrafficLightDetectionDatasetHandler
@@ -9,6 +10,7 @@ class DataHandlerFactory:
     def create_handler(format_name: str) -> DataHandler:
         switch = {
             "cvat-image": CvatImageHandler,
+            "cvat-video": CvatVideoHandler,
             "yolo-seg": YoloSegImageHandler,
             "yolo": YoloImageHandler,
             "traffic-light-detection-dataset": TrafficLightDetectionDatasetHandler

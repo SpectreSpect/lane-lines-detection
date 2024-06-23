@@ -16,20 +16,29 @@ from src.converter.containers import ExplicitImageContainer
 from src.converter.data import Mask
 from src.converter.core import Core
 from src.converter.handlers.data_handler_factory import DataHandlerFactory
+from src.converter.handlers.cvat_video_handler import CvatVideoHandler
+from src.converter.containers.video_image_container import VideoImageContainer
 from src.utils import *
+
 import os
 import yaml
 
 
 if __name__ == "__main__":
-    core = Core(r"data\datasets\sign-detection\rtsi\rtsi", "yolo")
-    bundels = core._annotation_bundles
+    core = Core("data/segment-1-seg", "cvat-video")
+    core.export("data/segmet-1-seg-yolo", "yolo", 0.2)
 
-    core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "3_18_1", bundle.annotations)), bundels))
-    core.export(r"data\datasets\sign-detection\rtsi-3_18_1", "yolo", 0)
+    # cvat_video_handler = CvatVideoHandler()
+    # annotation_bundels, label_names = cvat_video_handler.load("data/segment-1-seg")
 
-    # core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "5_15_3", bundle.annotations)), bundels))
-    # core.export(r"data\datasets\sign-detection\rtsi-5_15_3", "yolo", 0)
+    # print(len(annotation_bundels))
 
-    # core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "5_15_5", bundle.annotations)), bundels))
-    # core.export(r"data\datasets\sign-detection\rtsi-5_15_5", "yolo", 0)
+    # print(label_names)
+
+    # video_image_container = VideoImageContainer("data/segment-1-seg/video.mp4", 100)
+    # image = video_image_container.get_image()
+
+    # cv2.imshow("Image", annotation_bundels[0].image_container.get_image())
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
