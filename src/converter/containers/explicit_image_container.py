@@ -5,10 +5,13 @@ import os
 
 from numpy.core.multiarray import array as array
 from .image_container import ImageContainer
+import uuid
+import cv2
 
 class ExplicitImageContainer(ImageContainer):
     def __init__(self, image_path: str):
-        image_name = os.path.splitext(os.path.basename(image_path))[0]
+        #image_name = os.path.splitext(os.path.basename(image_path))[0]
+        image_name = str(uuid.uuid4())
         super().__init__(image_name)
         
         self._image_path = os.path.normpath(image_path)
@@ -26,6 +29,6 @@ class ExplicitImageContainer(ImageContainer):
         return self._image_path
     
     def save_image(self, dir_path: str):
-        base = os.path.basename(self._image_path)
-        shutil.copy(self._image_path, os.path.join(dir_path, base))
+        image = cv2.imread(self._image_path)
+        cv2.imwrite(os.path.join(dir_path, self._image_name + ".jpg"), image)
         

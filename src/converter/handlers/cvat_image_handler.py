@@ -12,9 +12,10 @@ from typing import List
 
 class CvatImageHandler(DataHandler):
     def __init__(self):
-        pass
+        super().__init__()
     
     def load(self, path: str) -> List[AnnotationBundle]:
+        super().load(path)
         annotation_bundels: List[AnnotationBundle] = []
         
         annotation_file_path = os.path.join(path, "annotations.xml")
@@ -51,7 +52,6 @@ class CvatImageHandler(DataHandler):
                 points_str = polygon_element.attrib['points']
                 
                 label = polygon_element.attrib['label']
-                label = label2id[label]
                 
                 matches = re.findall(r'-?\d+\.\d+|-?\d+', points_str)
                 points = np.array([float(match) for match in matches])
@@ -63,7 +63,7 @@ class CvatImageHandler(DataHandler):
                 annotations.append(mask)
             annotation_bundle = AnnotationBundle(annotations, image_container)
             annotation_bundels.append(annotation_bundle)
-        return annotation_bundels
+        return annotation_bundels, label_names
     
-    def save(self, path: str, validation_split: int):
-        pass
+    def save(self, annotation_bundels: List[AnnotationBundle], label_names: List[str], path: str, validation_split: int):
+        super().save(annotation_bundels, label_names, path, validation_split)

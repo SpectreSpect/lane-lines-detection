@@ -6,7 +6,7 @@ class Annotation(ABC):
     def __init__(self, 
                  points: np.ndarray,
                  points_n: np.ndarray,
-                 label: int, 
+                 label: str, 
                  image_container: ExplicitImageContainer,
                  is_valid: bool):
         self._points = points
