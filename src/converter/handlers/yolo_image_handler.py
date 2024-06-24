@@ -15,7 +15,7 @@ from collections import OrderedDict
 
 
 class YoloImageHandler(DataHandler):
-    def __init__(self, is_segmentation=False):
+    def __init__(self, is_segmentation=True):
         super().__init__()
         self.is_segmentation = is_segmentation
     
@@ -57,9 +57,19 @@ class YoloImageHandler(DataHandler):
                 
                 for line in label_lines:
                     values = line.strip('\n').split(' ')
+                    # matches = re.findall(r'-?\d+\.\d+|-?\d+', line)
+                    # values = np.array([float(match) for match in matches])
+                    
                     
                     label_name = label_names[int(values[0])]
+                    
+                    # points_n = values[1:].reshape(-1, 2)
                     points_n = np.array([float(values[idx]) for idx in range(1, len(values))]).reshape((-1, 2))
+                    
+                    for point in points_n:
+                        if point[0] < 0 or point[1] < 0:
+                            print("AAAAAAAAAAAAAAAAAAAAAAAAA") # YOU HAVE TO DELETE THIS ROW! IT WAS MADE SOLELY FOR DEBUGING!!!
+                    
                     points = points_n * image_container.get_image_shape()
 
                     args = dict(points=points, points_n=points_n, label=label_name, image_container=image_container, is_valid=idx==1)
@@ -117,10 +127,10 @@ class YoloImageHandler(DataHandler):
                     points_n = annotation.points_n
                     width, height = [points_n[1][0] - points_n[0][0], points_n[1][1] - points_n[0][1]]
                     x, y = points_n[0] + np.array([width, height]) / 2
-                    output_str += f" {x} {y} {width} {height}"
+                    output_str += f" {x:.10f} {y:.10f} {width:.10f} {height:.10f}"
                 else:
                     for point in annotation.points_n:
-                        output_str += f" {point[0]} {point[1]}"
+                        output_str += f" {point[0]:.10f} {point[1]:.10f}"
 
                 output_str += "\n"
                 

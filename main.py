@@ -18,6 +18,7 @@ from src.converter.core import Core
 from src.converter.handlers.data_handler_factory import DataHandlerFactory
 from src.converter.handlers.cvat_video_handler import CvatVideoHandler
 from src.converter.containers.video_image_container import VideoImageContainer
+from src.converter.data.box import Box
 from src.utils import *
 
 import os
@@ -25,20 +26,16 @@ import yaml
 
 
 if __name__ == "__main__":
-    core = Core("data/segment-1-seg", "cvat-video")
-    core.export("data/segmet-1-seg-yolo", "yolo", 0.2)
-
-    # cvat_video_handler = CvatVideoHandler()
-    # annotation_bundels, label_names = cvat_video_handler.load("data/segment-1-seg")
-
-    # print(len(annotation_bundels))
-
-    # print(label_names)
-
-    # video_image_container = VideoImageContainer("data/segment-1-seg/video.mp4", 100)
-    # image = video_image_container.get_image()
-
-    # cv2.imshow("Image", annotation_bundels[0].image_container.get_image())
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    rc_dataset_core = Core("data/RC-dataset", "yolo")
+    
+    # for annotation_bundle in rc_dataset_core._annotation_bundles:
+    #     for annotation in annotation_bundle._annotations:
+    #         if isinstance(annotation, Box):
+    #             print("BOOOOX")
+    
+    core_segment_2 = Core("data/segment-2-seg", "cvat-video")
+    
+    rc_dataset_core.merge(core_segment_2)
+    
+    rc_dataset_core.export("data/RC-dataset-2", "yolo", 0.2)
 
