@@ -56,34 +56,6 @@ class YoloSegmentationModel(AbstractModel):
         
         return annotation_bundles
 
-        # results = self.__model.predict(, verbose=False)
-
-        # for result in results:
-        #     if self._is_segmentation and result.masks is not None:
-        #         for mask in result.masks:
-        #             annotation = Mask(
-        #                 points=np.array(mask.xy), 
-        #                 points_n=np.array(mask.xyn), 
-        #                 label=self._model.names[int(result.boxes[0].cls)], 
-        #                 image_container=image, is_valid=False
-        #             )
-
-        #             annotations.append(annotation)
-        #     elif result.boxes is not None:
-        #         for box in result.boxes:
-        #             annotation = Box(
-        #                 points=np.array(box.xyxy), 
-        #                 points_n=np.array(box.xyxyn), 
-        #                 label=self._model.names[int(result.boxes[0].cls)], 
-        #                 image_container=image, 
-        #                 is_valid=False
-        #             )
-
-        #             annotations.append(annotation)
-
-        # return annotations
-        return None
-
     def get_label_names(self) -> List:
         label_names = []
 
