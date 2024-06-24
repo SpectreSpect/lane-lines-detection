@@ -31,30 +31,10 @@ def load_image(path: str):
 
 
 if __name__ == "__main__":
-    # model = YoloSegmentationModel("models/LLD/model.pt")
+    model = YoloSegmentationModel("models/LLD/model.pt")
     
-    image_container = ExplicitImageContainer("data/segmet-1-seg-yolo/images/train/0c71095e-fbf9-4d60-8673-4a0315241266.jpg")
+    image_container = ExplicitImageContainer("data/segmet-1-seg-yolo/images/train/0d510753-92af-4fbc-ab4f-9fa3b88c4893.jpg")
     
-    # model.predict([image_container])
+    annotation_bundels = model.predict([image_container])
+    print(annotation_bundels[0])
     
-    images = [load_image("data/segmet-1-seg-yolo/images/train/0c71095e-fbf9-4d60-8673-4a0315241266.jpg")]
-    
-    yolo_model = YOLO("models/LLD/model.pt")
-    
-    yolo_model.predict(images)
-    
-    # core = Core(r"data\datasets\sign-detection\rtsi\rtsi", "yolo")
-    # bundels = core._annotation_bundles
-
-    # core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "3_18_1", bundle.annotations)), bundels))
-    # core.export(r"data\datasets\sign-detection\rtsi-3_18_1", "yolo", 0)
-
-    # core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "5_15_3", bundle.annotations)), bundels))
-    # core.export(r"data\datasets\sign-detection\rtsi-5_15_3", "yolo", 0)
-
-    # core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "5_15_5", bundle.annotations)), bundels))
-    # core.export(r"data\datasets\sign-detection\rtsi-5_15_5", "yolo", 0)
-
-    # core = Core(r'data/RC-segmet-1-seg-yolo/segmet-1-seg-yolo', 'yolo')
-    # core.annotate(YOLOModel('data/lld-pytorch-level-5-v1-v1/runs/segment/train/weights/best.pt', is_segmentation=True))
-    # core.export(r'data/RC-segmet-1-seg-yolo/segmet-1-seg-yolo/test', 'yolo', 0)

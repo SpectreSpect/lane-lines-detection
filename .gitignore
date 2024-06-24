@@ -1,6 +1,6 @@
 /data/
-venv/
-tmp/
-models/
-runs/
+/venv/
+/tmp/
+/models/
+/runs/
 __pycache__/
