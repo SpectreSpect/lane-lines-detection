@@ -1,4 +1,4 @@
-from ...Models import AbstractModel
+from ..models import AbstractModel
 from ..data.annotation import Annotation
 from ..data.annotation_bundle import AnnotationBundle
 from typing import Callable, List

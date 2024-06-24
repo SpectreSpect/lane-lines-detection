@@ -18,11 +18,31 @@ from src.converter.core import Core
 from src.converter.handlers.data_handler_factory import DataHandlerFactory
 from src.utils import *
 import os
+from ultralytics import YOLO
+from PIL import Image
 
-from src.Models.YOLOModel import YOLOModel
+from src.converter.models import YoloSegmentationModel
+
+def load_image(path: str):
+    image = np.asarray(Image.open(path))
+    if image.shape[2] == 4:
+        image = image[..., :3]
+    return image
 
 
 if __name__ == "__main__":
+    # model = YoloSegmentationModel("models/LLD/model.pt")
+    
+    image_container = ExplicitImageContainer("data/segmet-1-seg-yolo/images/train/0c71095e-fbf9-4d60-8673-4a0315241266.jpg")
+    
+    # model.predict([image_container])
+    
+    images = [load_image("data/segmet-1-seg-yolo/images/train/0c71095e-fbf9-4d60-8673-4a0315241266.jpg")]
+    
+    yolo_model = YOLO("models/LLD/model.pt")
+    
+    yolo_model.predict(images)
+    
     # core = Core(r"data\datasets\sign-detection\rtsi\rtsi", "yolo")
     # bundels = core._annotation_bundles
 
@@ -35,6 +55,6 @@ if __name__ == "__main__":
     # core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "5_15_5", bundle.annotations)), bundels))
     # core.export(r"data\datasets\sign-detection\rtsi-5_15_5", "yolo", 0)
 
-    core = Core(r'data/RC-segmet-1-seg-yolo/segmet-1-seg-yolo', 'yolo')
-    core.annotate(YOLOModel('data/lld-pytorch-level-5-v1-v1/runs/segment/train/weights/best.pt', is_segmentation=True))
-    core.export(r'data/RC-segmet-1-seg-yolo/segmet-1-seg-yolo/test', 'yolo', 0)
+    # core = Core(r'data/RC-segmet-1-seg-yolo/segmet-1-seg-yolo', 'yolo')
+    # core.annotate(YOLOModel('data/lld-pytorch-level-5-v1-v1/runs/segment/train/weights/best.pt', is_segmentation=True))
+    # core.export(r'data/RC-segmet-1-seg-yolo/segmet-1-seg-yolo/test', 'yolo', 0)
