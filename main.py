@@ -19,16 +19,22 @@ from src.converter.handlers.data_handler_factory import DataHandlerFactory
 from src.utils import *
 import os
 
+from src.Models.YOLOModel import YOLOModel
+
 
 if __name__ == "__main__":
-    core = Core(r"data\datasets\sign-detection\rtsi\rtsi", "yolo")
-    bundels = core._annotation_bundles
+    # core = Core(r"data\datasets\sign-detection\rtsi\rtsi", "yolo")
+    # bundels = core._annotation_bundles
 
-    core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "3_18_1", bundle.annotations)), bundels))
-    core.export(r"data\datasets\sign-detection\rtsi-3_18_1", "yolo", 0)
+    # core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "3_18_1", bundle.annotations)), bundels))
+    # core.export(r"data\datasets\sign-detection\rtsi-3_18_1", "yolo", 0)
 
     # core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "5_15_3", bundle.annotations)), bundels))
     # core.export(r"data\datasets\sign-detection\rtsi-5_15_3", "yolo", 0)
 
     # core._annotation_bundles = list(filter(lambda bundle: any(map(lambda annotation: annotation.label == "5_15_5", bundle.annotations)), bundels))
     # core.export(r"data\datasets\sign-detection\rtsi-5_15_5", "yolo", 0)
+
+    core = Core(r'data/RC-segmet-1-seg-yolo/segmet-1-seg-yolo', 'yolo')
+    core.annotate(YOLOModel('data/lld-pytorch-level-5-v1-v1/runs/segment/train/weights/best.pt', is_segmentation=True))
+    core.export(r'data/RC-segmet-1-seg-yolo/segmet-1-seg-yolo/test', 'yolo', 0)

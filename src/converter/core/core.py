@@ -1,15 +1,18 @@
-from ..handlers.data_handler_factory import DataHandlerFactory
-from ..handlers import DataHandler
-from ..data.annotation_bundle import AnnotationBundle
+from ...Models import AbstractModel
 from ..data.annotation import Annotation
-from typing import List, Callable
+from ..data.annotation_bundle import AnnotationBundle
+from typing import Callable, List
+from ..handlers import DataHandler
+from ..handlers.data_handler_factory import DataHandlerFactory
+
 
 class Core():
     def __init__(self, dataset_path: str, dataset_format: str="yolo", handler: DataHandler=None):
         self._label_names = []
         self._validation_split = 0.0
         self._dataset_format = dataset_format
-        
+        self._dataset_path = dataset_path
+
         handler = DataHandlerFactory.create_handler(dataset_format) if handler is None else handler
         self._annotation_bundles, self._label_names = handler.load(dataset_path)
 
@@ -22,8 +25,11 @@ class Core():
     def merge(self, core):
         self._annotation_bundles += core._annotation_bundles
         self._label_names = list(set(self._label_names + core._label_names))
-    
-    
+
+    def annotate(self, model: AbstractModel):
+        self._annotation_bundles = model.annotate(self._annotation_bundles)
+        self._label_names = list(set(self._label_names + model.get_label_names()))
+
     # @staticmethod
     # def filter_bundles(annotation_bundles: List[AnnotationBundle], key: Callable[[Annotation], bool]):
     #     filtered_annotation_bundel: List[AnnotationBundle] = []
