@@ -7,6 +7,7 @@ from typing import List
 import numpy as np
 from ultralytics import YOLO
 from src.utiles_for_test import *
+import timeit
 
 
 class YoloSegmentationModel(AbstractModel):
@@ -17,9 +18,27 @@ class YoloSegmentationModel(AbstractModel):
         if torch.cuda.is_available():
             self.__model.to('cuda')
 
-    def annotate(self, annotation_bundles: List[AnnotationBundle]):
+    def annotate(self, annotation_bundles: List[AnnotationBundle], verbose=True):
+        bundles_count = len(annotation_bundles)
+        annotated_bundles_count = 0
+        if verbose:
+            print(f"Annotation started. Total number of annotation bundles: {bundles_count}")
+        start = timeit.default_timer()
         for annotation_bundle in annotation_bundles:
             annotation_bundle.annotations += self.predict([annotation_bundle.image_container])[0].annotations
+            
+            annotated_bundles_count += 1
+
+            end = timeit.default_timer()
+
+            elapsed_time = end - start
+            eta = (elapsed_time / annotated_bundles_count) * bundles_count - annotated_bundles_count
+
+            if verbose:
+                print(f"{annotated_bundles_count}/{bundles_count}   elapsed time: {elapsed_time}    eta: {eta}")
+            
+        
+
 
     
     def predict(self, image_containers: List[ImageContainer]) -> List[AnnotationBundle]:

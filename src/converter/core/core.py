@@ -26,8 +26,8 @@ class Core():
         self._annotation_bundles += core._annotation_bundles
         self._label_names = list(set(self._label_names + core._label_names))
 
-    def annotate(self, model: AbstractModel):
-        model.annotate(self._annotation_bundles)
+    def annotate(self, model: AbstractModel, verbose=True):
+        model.annotate(self._annotation_bundles, verbose=verbose)
         self._label_names = list(set(self._label_names + model.get_label_names()))
 
     # @staticmethod
