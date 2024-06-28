@@ -33,8 +33,10 @@ def load_image(path: str):
 if __name__ == "__main__":
     model = YoloSegmentationModel("models/LLD/model.pt")
     
-    image_container = ExplicitImageContainer("data/segmet-1-seg-yolo/images/train/0d510753-92af-4fbc-ab4f-9fa3b88c4893.jpg")
+    image_container = ExplicitImageContainer("data/RC-dataset-2/images/train/0a839bcc-95d3-4d65-ad64-897e9f5b82b1.jpg")
     
-    annotation_bundels = model.predict([image_container])
-    print(annotation_bundels[0])
+    print(model.get_label_names())
+
+    # annotation_bundels = model.predict([image_container])
+    # print(annotation_bundels[0])
     

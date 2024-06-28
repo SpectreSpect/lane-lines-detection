@@ -59,7 +59,7 @@ class YoloSegmentationModel(AbstractModel):
     def get_label_names(self) -> List:
         label_names = []
 
-        for _, name in self._model.names.items():
+        for _, name in self.__model.names.items():
             label_names.append(name)
 
         return label_names
