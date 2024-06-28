@@ -11,6 +11,10 @@ class AnnotationBundle():
     def annotations(self):
         return self._annotations
     
+    @annotations.setter
+    def annotations(self, new_value):
+        self._annotations = new_value
+    
     @property
     def image_container(self):
         return self._image_container

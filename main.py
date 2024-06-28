@@ -31,26 +31,7 @@ def load_image(path: str):
 
 
 if __name__ == "__main__":
-    core = Core("data/RC-dataset-2", "yolo")
+    model = YoloSegmentationModel("models/LLD/model.pt")
 
-    annotation_bundle = core._annotation_bundles[0]
-    image = annotation_bundle.image_container.get_image()
-    mask = annotation_bundle.annotations[0]
-
-
-
-    visualizer = Visualizer()
-    # visualizer.draw_mask()
-
-    visualizer.show_image(image)
-
-
-    # model = YoloSegmentationModel("models/LLD/model.pt")
-    
-    # image_container = ExplicitImageContainer("data/RC-dataset-2/images/train/0a839bcc-95d3-4d65-ad64-897e9f5b82b1.jpg")
-    
-    # print(model.get_label_names())
-
-    # annotation_bundels = model.predict([image_container])
-    # print(annotation_bundels[0])
-    
+    core = Core("data/rm-dataset-yolo", "yolo")
+    core.annotate(model)

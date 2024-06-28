@@ -19,8 +19,7 @@ class YoloSegmentationModel(AbstractModel):
 
     def annotate(self, annotation_bundles: List[AnnotationBundle]):
         for annotation_bundle in annotation_bundles:
-            annotation_bundle.annotations += self.predict([annotation_bundle.image_container])[0]
-        return annotation_bundles
+            annotation_bundle.annotations += self.predict([annotation_bundle.image_container])[0].annotations
 
     
     def predict(self, image_containers: List[ImageContainer]) -> List[AnnotationBundle]:
@@ -36,7 +35,8 @@ class YoloSegmentationModel(AbstractModel):
         annotation_bundles: List[AnnotationBundle] = []
         
         for image_container in image_containers:
-            results = self.__model.predict([image_container.get_image()], verbose=False)
+            image = image_container.get_image()[:, :, :3]
+            results = self.__model.predict([image], verbose=False)
             
             image_shape = image_container.get_image_shape()   
             for result in results:
