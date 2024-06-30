@@ -35,7 +35,7 @@ class YoloSegmentationModel(AbstractModel):
             eta = (elapsed_time / annotated_bundles_count) * bundles_count - annotated_bundles_count
 
             if verbose:
-                print(f"{annotated_bundles_count}/{bundles_count}   elapsed time: {elapsed_time}    eta: {eta}")
+                print(f"{annotated_bundles_count}/{bundles_count}   elapsed time: {elapsed_time:.3f}    eta: {eta:.3f}")
             
         
 
@@ -61,14 +61,15 @@ class YoloSegmentationModel(AbstractModel):
             for result in results:
                 annotations: List[Annotation] = []
                 
-                for idx, result_mask in enumerate(result.masks):
-                    points_n = result_mask.xyn[0] # Might be an error
-                    points = points_n * image_shape
-                    label = self.__model.names[int(result.boxes[idx].cls)]
-                    
-                    mask = Mask(points, points_n, label, image_container, False)
-                    
-                    annotations.append(mask)
+                if result.masks is not None:
+                    for idx, result_mask in enumerate(result.masks):
+                        points_n = result_mask.xyn[0] # Might be an error
+                        points = points_n * image_shape
+                        label = self.__model.names[int(result.boxes[idx].cls)]
+                        
+                        mask = Mask(points, points_n, label, image_container, False)
+                        
+                        annotations.append(mask)
                 
                 annotation_bundle = AnnotationBundle(annotations, image_container)
                 annotation_bundles.append(annotation_bundle)
