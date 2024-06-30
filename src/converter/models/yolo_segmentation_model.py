@@ -37,9 +37,6 @@ class YoloSegmentationModel(AbstractModel):
             if verbose:
                 print(f"{annotated_bundles_count}/{bundles_count}   elapsed time: {elapsed_time:.3f}    eta: {eta:.3f}")
             
-        
-
-
     
     def predict(self, image_containers: List[ImageContainer]) -> List[AnnotationBundle]:
         '''

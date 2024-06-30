@@ -3,6 +3,8 @@ from ..data.annotation import Annotation
 from ..data.mask import Mask
 from ..data.box import Box
 from ..data.annotation_bundle import AnnotationBundle
+from .color_map import ColorMap
+from .pallete import Pallete
 import cv2
 # from ..containers.image_container import ImageContainer
 
@@ -27,27 +29,28 @@ class Visualizer():
         cv2.destroyAllWindows()
 
 
-    def draw_mask(self, image: np.ndarray, mask: Mask, color: list):
+    def draw_mask(self, image: np.ndarray, mask: Mask, pallete: Pallete):
         counter = mask.points.copy().reshape((-1, 1, 2)).astype(int)
         
         print(mask.points)
         print(counter.shape)
         
-        cv2.drawContours(image, [counter], contourIdx=-1, color=(color[0], color[1], color[2]), thickness=-1)
+        color = pallete.get_color(mask.label)
+        cv2.drawContours(image, [counter], contourIdx=-1, color=color, thickness=-1)
     
     def draw_box(self, image: np.ndarray, box: Box):
         pass
 
-    def draw_annotation(self, image, annotation: Annotation):
+    def draw_annotation(self, image, annotation: Annotation, pallate: Pallete):
         if isinstance(annotation, Mask):
-            self.draw_mask(image, annotation)
+            self.draw_mask(image, annotation, pallate)
         elif isinstance(annotation, Box):
             self.draw_box(image, annotation)
 
-    def show_annotation_bundle(self, annotation_bundle: AnnotationBundle, width=-1):
+    def show_annotation_bundle(self, annotation_bundle: AnnotationBundle, pallate: Pallete, width=-1):
         image = annotation_bundle.image_container.get_image().copy()
 
         for annotation in annotation_bundle.annotations:
-            self.draw_mask(image, annotation, (100, 100, 255))
+            self.draw_mask(image, annotation, pallate)
         
         self.show_image(image, width=width)

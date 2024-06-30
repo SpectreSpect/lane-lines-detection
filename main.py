@@ -22,6 +22,9 @@ from ultralytics import YOLO
 from PIL import Image
 from src.converter.models import YoloSegmentationModel
 from src.converter.visualizer import Visualizer
+from src.converter.visualizer import ColorKeypoint
+from src.converter.visualizer import ColorMap
+from src.converter.visualizer import Pallete
 
 def load_image(path: str):
     image = np.asarray(Image.open(path))
@@ -31,7 +34,35 @@ def load_image(path: str):
 
 
 if __name__ == "__main__":
+    keypoints = [ColorKeypoint([255, 0, 0], 0.3),
+                 ColorKeypoint([0, 255, 0], 0.8),
+                 ColorKeypoint([0, 0, 255], 0.9)]
+
+    color_map = ColorMap.from_keypoints(keypoints)
+
+    
+    
+
+
+    # print(f"Colors: {pallete.colors}\n")
+    # print(f"Colors: {pallete.key_values}\n")
+    
+
+    # color = color_map.get_color(0.88)
+
+    # print(color)
+
     model = YoloSegmentationModel("models/LLD/model.pt")
 
     core = Core("data/rm-dataset-yolo", "yolo")
-    core.annotate(model)
+    # core.annotate(model)
+    model.annotate([core._annotation_bundles[1]])
+
+    core._label_names = list(set(core._label_names + model.get_label_names()))
+
+    pallete = Pallete.from_colormap(core._label_names, color_map)
+
+    visualizer = Visualizer()
+
+    visualizer.show_annotation_bundle(core._annotation_bundles[1], pallete)
+    
