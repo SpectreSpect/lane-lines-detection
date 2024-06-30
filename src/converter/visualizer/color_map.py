@@ -26,7 +26,6 @@ class ColorMap():
         for keypoint in self.keypoints:
             if keypoint.point == value:
                 return keypoint.color
-
             if keypoint.point < value:
                 left_keypoint = keypoint
             if keypoint.point > value:
