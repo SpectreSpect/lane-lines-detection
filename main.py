@@ -22,20 +22,24 @@ from src.converter.data.box import Box
 from src.utils import *
 
 import os
-import yaml
+from ultralytics import YOLO
+from PIL import Image
+from src.converter.models import YoloSegmentationModel
+from src.converter.visualizer import Visualizer
+from src.converter.visualizer import ColorKeypoint
+from src.converter.visualizer import ColorMap
+from src.converter.visualizer import Pallete
+
+def load_image(path: str):
+    image = np.asarray(Image.open(path))
+    if image.shape[2] == 4:
+        image = image[..., :3]
+    return image
 
 
 if __name__ == "__main__":
-    rc_dataset_core = Core("data/RC-dataset", "yolo")
-    
-    # for annotation_bundle in rc_dataset_core._annotation_bundles:
-    #     for annotation in annotation_bundle._annotations:
-    #         if isinstance(annotation, Box):
-    #             print("BOOOOX")
-    
-    core_segment_2 = Core("data/segment-2-seg", "cvat-video")
-    
-    rc_dataset_core.merge(core_segment_2)
-    
-    rc_dataset_core.export("data/RC-dataset-2", "yolo", 0.2)
+    model = YoloSegmentationModel("models/LLD/model.pt")
 
+    core = Core("data/rm-dataset-yolo", "yolo")
+    core.annotate(model)
+    core.export("data/test-augmented-dataset", "yolo", 0.2)
