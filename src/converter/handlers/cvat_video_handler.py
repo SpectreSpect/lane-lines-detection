@@ -70,9 +70,18 @@ class CvatVideoHandler(DataHandler):
                 
                 mask = Mask(points, points_n, label, image_containers[frame_number], False) 
                 annotation_batches[frame_number].append(mask)
-            
-        annotation_bundels: List[AnnotationBundle] = [AnnotationBundle(annotation_batches[frame_id],
-                                                                       image_containers[frame_id]) for frame_id in range(frames_count)]
+    
+        # It's better to fix this thing below (because it's kinda lame and I did it just to save some time for now)
+        filtered_image_containers =  []
+        filtered_annotation_batches = []
+        for idx, image_container in enumerate(image_containers):
+            if image_container is not None:
+                filtered_image_containers.append(image_container)
+                filtered_annotation_batches.append(annotation_batches[idx])
+        ###################################################################
+    
+        annotation_bundels: List[AnnotationBundle] = [AnnotationBundle(filtered_annotation_batches[idx],
+                                                                       filtered_image_containers[idx]) for idx in range(len(filtered_image_containers))]
         
                 
 

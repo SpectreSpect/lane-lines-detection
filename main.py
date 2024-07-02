@@ -38,8 +38,14 @@ def load_image(path: str):
 
 
 if __name__ == "__main__":
-    model = YoloSegmentationModel("models/LLD/model.pt")
+    segment1_core = Core("data/Road segmentation/Segment-1  (done)", "cvat-video")
+    segment2_core = Core("data/Road segmentation/Segment-2 (done)", "cvat-video")
+    segment3_core = Core("data/Road segmentation/Segment-3 (done)", "cvat-video")
+    zed_segment1_core = Core("data/zed-morning/segment-1 (done)", "cvat-image")
 
-    core = Core("data/rm-dataset-yolo", "yolo")
-    core.annotate(model)
-    core.export("data/test-augmented-dataset", "yolo", 0.2)
+    segment1_core.merge(zed_segment1_core)
+    segment1_core.merge(segment2_core)
+    segment1_core.merge(segment3_core)
+    
+
+    segment1_core.export("data/RC-dataset-3", "yolo", 0.2)

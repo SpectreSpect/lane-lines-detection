@@ -45,6 +45,7 @@ class CvatImageHandler(DataHandler):
             image_path = os.path.join(path, "images", image_element.attrib['name'])
             
             image_container = ExplicitImageContainer(image_path)
+
             annotations: List[Annotation] = []
 
             polygon_elements = image_element.findall('.//polygon')
