@@ -66,9 +66,9 @@ class YoloImageHandler(DataHandler):
                     # points_n = values[1:].reshape(-1, 2)
                     points_n = np.array([float(values[idx]) for idx in range(1, len(values))]).reshape((-1, 2))
                     
-                    for point in points_n:
-                        if point[0] < 0 or point[1] < 0:
-                            print("AAAAAAAAAAAAAAAAAAAAAAAAA") # YOU HAVE TO DELETE THIS ROW! IT WAS MADE SOLELY FOR DEBUGING!!!
+                    # for point in points_n:
+                    #     if point[0] < 0 or point[1] < 0:
+                    #         print("AAAAAAAAAAAAAAAAAAAAAAAAA") # YOU HAVE TO DELETE THIS ROW! IT WAS MADE SOLELY FOR DEBUGING!!!
                     
                     points = points_n * image_container.get_image_shape()
 

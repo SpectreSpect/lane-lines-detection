@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import re
 from ..data import Mask
+from ..data import Box
 from ..containers import VideoImageContainer
 from ..data.annotation import Annotation
 from ..data.annotation_bundle import AnnotationBundle
@@ -70,6 +71,21 @@ class CvatVideoHandler(DataHandler):
                 
                 mask = Mask(points, points_n, label, image_containers[frame_number], False) 
                 annotation_batches[frame_number].append(mask)
+            
+            box_elements = track_element.findall('.//box')
+            for box_element in box_elements:
+                frame_number = int(box_element.attrib['frame'])
+
+                points = [[float(box_element.attrib['xtl']), float(box_element.attrib['ytl'])],
+                          [float(box_element.attrib['xbr']), float(box_element.attrib['ybr'])]]
+                
+                points_n = points.copy() / image_shape
+                
+                if image_containers[frame_number] is None:
+                    image_containers[frame_number] = VideoImageContainer(video_path, frame_number)
+                
+                box = Box(points, points_n, label, image_containers[frame_number], False) 
+                annotation_batches[frame_number].append(box)
     
         # It's better to fix this thing below (because it's kinda lame and I did it just to save some time for now)
         filtered_image_containers =  []

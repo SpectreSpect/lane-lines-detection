@@ -37,15 +37,21 @@ def load_image(path: str):
     return image
 
 
-if __name__ == "__main__":
-    segment1_core = Core("data/Road segmentation/Segment-1  (done)", "cvat-video")
-    segment2_core = Core("data/Road segmentation/Segment-2 (done)", "cvat-video")
-    segment3_core = Core("data/Road segmentation/Segment-3 (done)", "cvat-video")
-    zed_segment1_core = Core("data/zed-morning/segment-1 (done)", "cvat-image")
-
-    segment1_core.merge(zed_segment1_core)
-    segment1_core.merge(segment2_core)
-    segment1_core.merge(segment3_core)
+if __name__ == "__main__":    
+    segmment1_core = Core("data/TrafficLight/segment1", "cvat-image")
+    # segmment2_core = Core("data/Traffic Light/segment 2", "cvat-image")
+    # segmment3_core = Core("data/Traffic Light/segment 3", "cvat-image")
+    segmment4_core = Core("data/TrafficLight/segment4", "cvat-image")
+    # segmment5_core = Core("data/TrafficLight/segment5", "cvat-image")
+    segmment6_core = Core("data/TrafficLight/segment6", "cvat-image")
+    tld_core = Core("data/TLD-dataset-3", "yolo")
     
+    # segmment1_core.merge(segmment2_core)
+    # segmment1_core.merge(segmment3_core)
+    segmment1_core.merge(segmment4_core)
+    # segmment1_core.merge(segmment5_core)
+    segmment1_core.merge(segmment6_core)
+    segmment1_core.merge(tld_core)
 
-    segment1_core.export("data/RC-dataset-3", "yolo", 0.2)
+    segmment1_core.export("data/TLD-dataset-4", "yolo", 0.2)
+    # tld_core = Core("data/TLD-dataset-4", "yolo")
