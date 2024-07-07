@@ -7,6 +7,7 @@ from ..data import Mask
 from ..containers import ExplicitImageContainer
 from ..data.annotation import Annotation
 from ..data.annotation_bundle import AnnotationBundle
+from ..data import Box
 from typing import List
 
 
@@ -46,6 +47,9 @@ class CvatImageHandler(DataHandler):
             
             image_container = ExplicitImageContainer(image_path)
 
+            if image_container.get_image() is None:
+                raise Exception("Cannot load image")
+
             annotations: List[Annotation] = []
 
             polygon_elements = image_element.findall('.//polygon')
@@ -62,6 +66,18 @@ class CvatImageHandler(DataHandler):
                 
                 mask = Mask(points, points_n, label, image_container, False)
                 annotations.append(mask)
+            
+            box_elements = image_element.findall('.//box')
+            for box_element in box_elements:      
+                label = box_element.attrib['label']
+                points = [[float(box_element.attrib['xtl']), float(box_element.attrib['ytl'])],
+                          [float(box_element.attrib['xbr']), float(box_element.attrib['ybr'])]]
+                
+                points_n = points.copy() / image_shape
+                
+                box = Box(points, points_n, label, image_container, False)
+                annotations.append(box)
+
             annotation_bundle = AnnotationBundle(annotations, image_container)
             annotation_bundels.append(annotation_bundle)
         return annotation_bundels, label_names
