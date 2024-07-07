@@ -114,7 +114,7 @@ class LinesAnalizator():
                     car_line_id = self.num_road_to_line_id(line_points, right_curbside[0], idx, border_conditions=False)
                     break
         return car_line_id
-                
+        
 
 
     def get_count_roads(self, image, batch_lines, min_y, max_y, image_size_x, gap=20, min_distance=20, car_point_part=0.5):

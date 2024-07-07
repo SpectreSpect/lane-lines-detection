@@ -14,6 +14,9 @@ from src.converter.data.mask import Mask
 from src.converter.data.annotation import Annotation
 from typing import List
 
+from src.predictions.lines_analizator.horizontal_intersection_line import HorizontalIntersectionLine
+from src.predictions.lines_analizator.line_points.lane_point import LanePoint
+
 # default_palette = [
 #     (255, 0, 0),
 #     (0, 255, 0),
@@ -518,6 +521,14 @@ def view_prediction_video(model, src, label_names=[], resized_width=-1, skip_sec
             # measurements *= hits
 
             mean_elapsed_time = 0
+
+        line = HorizontalIntersectionLine(0.5).set_lane_points(batch_lines[0])
+
+        cv2.line(image, (0, int(line.origin[1] * image.shape[0])), (int(image.shape[1]), int(line.origin[1] * image.shape[0])), (255, 0, 0), thickness=3)
+
+        for point in line.line_points:
+            color = default_palette[point.label % len(default_palette)]
+            cv2.circle(image, (int(point.t * image.shape[1]), int(line.origin[1] * image.shape[0])), 5, color, thickness=-1)
 
         draw_segmentation([image], mask_batches)
         draw_lines([image], batch_lines)
