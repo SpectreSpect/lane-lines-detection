@@ -18,7 +18,7 @@ class Mask(Annotation):
     
     def draw(self, image: np.ndarray = None, mask_image: np.ndarray = None, palette: AbstractPalette = None):
         points = self.points_n * np.array(image.shape[:2])[::-1]
-        color = palette.get_color(self.annotation_bundle._core._label_names.index(self.label))[:3]
+        color = palette.get_color(self.annotation_bundle._lableable.get_labels().index(self.label))[:3]
 
         cv2.drawContours(mask_image, [points.astype(int)], contourIdx=-1, color=color, thickness=-1)
 

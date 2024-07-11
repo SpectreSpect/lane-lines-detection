@@ -9,7 +9,7 @@ from ultralytics import YOLO
 from src.utiles_for_test import *
 
 
-class YoloSegmentationModel(AbstractYoloModel):
+class YoloDetectionModel(AbstractYoloModel):
     def __init__(self, model_path: str):
         super().__init__(model_path)
 
@@ -18,14 +18,14 @@ class YoloSegmentationModel(AbstractYoloModel):
         annotations: List[Annotation] = []
         image_shape = image_container.get_image_shape()
                 
-        if result.masks is not None:
-            for idx, result_mask in enumerate(result.masks):
-                points_n = result_mask.xyn[0] # Might be an error
+        if result.boxes is not None:
+            for idx, xyxyn in enumerate(result.boxes.xyxyn):
+                points_n = np.reshape(xyxyn.cpu().numpy(), (-1, 2)) # Might be an error
                 points = points_n * image_shape
                 label = self._model.names[int(result.boxes[idx].cls)]
                 
-                mask = Mask(points, points_n, label, image_container, False)
+                box = Box(points, points_n, label, image_container, False)
                 
-                annotations.append(mask)
+                annotations.append(box)
         
         return annotations

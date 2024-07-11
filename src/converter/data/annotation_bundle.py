@@ -1,6 +1,7 @@
 from ..visualizer.palette.abstract_palette import AbstractPalette
 from ..containers.image_container import ImageContainer
 from ..visualizer.drawable import IDrawable
+from ..lable_interface import ILableable
 from typing import List
 import numpy as np
 import cv2
@@ -8,10 +9,10 @@ import cv2
 mask_alpha = 0.6
 
 class AnnotationBundle(IDrawable):
-    def __init__(self, annotations, image_container: ImageContainer, core = None):
+    def __init__(self, annotations, image_container: ImageContainer, lableable: ILableable = None):
         self._annotations = annotations
         self._image_container = image_container
-        self._core = core
+        self._lableable = lableable
 
         for annotation in self._annotations:
             annotation._annotation_bundle = self

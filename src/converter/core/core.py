@@ -7,9 +7,10 @@ from ..handlers.data_handler_factory import DataHandlerFactory
 import cv2
 from src.converter.visualizer.palette.abstract_palette import AbstractPalette
 from src.converter.visualizer.palette.palette_register import PaletteRegister, palette_register
+from ..lable_interface import ILableable
 
 
-class Core():
+class Core(ILableable):
     def __init__(self, dataset_path: str, dataset_format: str="yolo", handler: DataHandler=None):
         self._label_names = []
         self._validation_split = 0.0
@@ -20,7 +21,7 @@ class Core():
         self._annotation_bundles, self._label_names = handler.load(dataset_path)
 
         for bundle in self._annotation_bundles:
-            bundle._core = self
+            bundle._lableable = self
 
 
     def export(self, output_path: str, dataset_format: str, validation_split: float):
@@ -33,7 +34,7 @@ class Core():
         self._label_names = list(set(self._label_names + core._label_names))
 
         for bundle in core._annotation_bundles:
-            bundle._core = self
+            bundle._lableable = self
 
 
     def annotate(self, model: AbstractModel, verbose=True):
@@ -52,6 +53,10 @@ class Core():
                 labels = labels.union([annotation.label])
         
         self._label_names = list(labels)
+    
+
+    def get_labels(self):
+        return self._label_names
 
 
     def filter_bundles(self, labels, max_bundles=-1):

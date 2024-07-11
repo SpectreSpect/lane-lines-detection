@@ -25,7 +25,7 @@ class Box(Annotation):
 
     def draw(self, image: np.ndarray = None, mask_image: np.ndarray = None, palette: AbstractPalette = None):
         points = self.points_n * np.array(image.shape[:2])[::-1]
-        color = palette.get_color(self.annotation_bundle._core._label_names.index(self.label))[:3]
+        color = palette.get_color(self.annotation_bundle._lableable.get_labels().index(self.label))[:3]
         cv2.rectangle(image, points[0].astype(int), points[1].astype(int), color, thickness=box_draw_thickness)
 
         text_size = cv2.getTextSize(self.label, cv2.FONT_HERSHEY_SIMPLEX, box_text_font_scale, thickness=box_text_font_thickness)[0]

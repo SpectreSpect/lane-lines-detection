@@ -2,11 +2,12 @@ from abc import abstractmethod
 from ..data.annotation import Annotation
 from ..data.annotation_bundle import AnnotationBundle
 from ..containers.image_container import ImageContainer
+from ..lable_interface import ILableable
 from typing import List
 import numpy as np
 
 
-class AbstractModel:
+class AbstractModel(ILableable):
     def __init__(self):
         pass
     
@@ -18,9 +19,4 @@ class AbstractModel:
     # Возвращает унифицированный список AnnotationBundle в зависимости от результата работы метода predict конкретной модели
     @abstractmethod
     def annotate(self, annotation_bundles: List[AnnotationBundle]):
-        pass
-
-    # Возвращает список классов модели в зависимости от формата их хранения
-    @abstractmethod
-    def get_label_names(self) -> list:
         pass
