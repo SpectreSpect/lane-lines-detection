@@ -2,7 +2,7 @@ from .data_handler import DataHandler
 import json
 import os
 from ..data.annotation_bundle import AnnotationBundle
-from ..containers import ExplicitImageContainer
+from ..containers.explicit_image_container import ExplicitImageContainer
 from ..data.annotation import Annotation
 from ..data.box import Box
 from typing import List

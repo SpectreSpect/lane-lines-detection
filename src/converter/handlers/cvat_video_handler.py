@@ -3,9 +3,9 @@ import os
 import xml.etree.ElementTree as ET
 import numpy as np
 import re
-from ..data import Mask
-from ..data import Box
-from ..containers import VideoImageContainer
+from ..data.mask import Mask
+from ..data.box import Box
+from ..containers.video_image_container import VideoImageContainer
 from ..data.annotation import Annotation
 from ..data.annotation_bundle import AnnotationBundle
 from typing import List

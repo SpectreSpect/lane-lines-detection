@@ -3,8 +3,8 @@ import os
 import xml.etree.ElementTree as ET
 import numpy as np
 import re
-from ..data import Mask
-from ..containers import ExplicitImageContainer
+from ..data.mask import Mask
+from ..containers.explicit_image_container import ExplicitImageContainer
 import shutil
 from typing import List
 from ..data.annotation import Annotation
@@ -108,7 +108,7 @@ class YoloImageHandler(DataHandler):
         config = {}
         config["path"] = os.path.join(os.getcwd(), path)
         config["train"] = r"images\train"
-        config["val"] = r"images\val"
+        config["val"] = r"images\valid"
         config["nc"] = len(label_names)
         config["names"] = label_names
 

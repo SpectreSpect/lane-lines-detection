@@ -3,11 +3,11 @@ import os
 import xml.etree.ElementTree as ET
 import numpy as np
 import re
-from ..data import Mask
-from ..containers import ExplicitImageContainer
+from ..data.mask import Mask
+from ..containers.explicit_image_container import ExplicitImageContainer
 from ..data.annotation import Annotation
 from ..data.annotation_bundle import AnnotationBundle
-from ..data import Box
+from ..data.box import Box
 from typing import List
 
 
