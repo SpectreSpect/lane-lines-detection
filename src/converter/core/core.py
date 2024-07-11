@@ -4,6 +4,9 @@ from ..data.annotation_bundle import AnnotationBundle
 from typing import Callable, List
 from ..handlers import DataHandler
 from ..handlers.data_handler_factory import DataHandlerFactory
+import cv2
+from src.converter.visualizer.palette.abstract_palette import AbstractPalette
+from src.converter.visualizer.palette.palette_register import PaletteRegister, palette_register
 
 
 class Core():
@@ -16,6 +19,9 @@ class Core():
         handler = DataHandlerFactory.create_handler(dataset_format) if handler is None else handler
         self._annotation_bundles, self._label_names = handler.load(dataset_path)
 
+        for bundle in self._annotation_bundles:
+            bundle._core = self
+
 
     def export(self, output_path: str, dataset_format: str, validation_split: float):
         handler = DataHandlerFactory.create_handler(dataset_format)
@@ -25,6 +31,9 @@ class Core():
     def merge(self, core):
         self._annotation_bundles += core._annotation_bundles
         self._label_names = list(set(self._label_names + core._label_names))
+
+        for bundle in core._annotation_bundles:
+            bundle._core = self
 
 
     def annotate(self, model: AbstractModel, verbose=True):
@@ -43,7 +52,7 @@ class Core():
                 labels = labels.union([annotation.label])
         
         self._label_names = list(labels)
-    
+
 
     def filter_bundles(self, labels, max_bundles=-1):
         filtred_bundles = set()
@@ -100,3 +109,11 @@ class Core():
                 print(f"{label}: {count}")
 
         return counts
+
+
+    def show_bundles(self, palette: AbstractPalette = palette_register.palettes["rainbow"], target_width: int = 1000):
+        for bundle in self._annotation_bundles:
+            image = bundle.draw_pp(palette=palette, target_width=target_width)
+            cv2.imshow("image", image)
+            cv2.waitKey(0)
+        cv2.destroyAllWindows()

@@ -15,7 +15,7 @@ from collections import OrderedDict
 
 
 class YoloImageHandler(DataHandler):
-    def __init__(self, is_segmentation=True):
+    def __init__(self, is_segmentation=False):
         super().__init__()
         self.is_segmentation = is_segmentation
     
@@ -65,6 +65,9 @@ class YoloImageHandler(DataHandler):
                     
                     # points_n = values[1:].reshape(-1, 2)
                     points_n = np.array([float(values[idx]) for idx in range(1, len(values))]).reshape((-1, 2))
+
+                    if not self.is_segmentation:
+                        points_n = np.array([points_n[0] - points_n[1] / 2, points_n[0] + points_n[1] / 2])
                     
                     # for point in points_n:
                     #     if point[0] < 0 or point[1] < 0:

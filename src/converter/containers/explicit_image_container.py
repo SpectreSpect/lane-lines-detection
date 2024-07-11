@@ -17,7 +17,7 @@ class ExplicitImageContainer(ImageContainer):
         self._image_path = os.path.normpath(image_path)
     
     def get_image(self):
-        image = np.asarray(Image.open(self._image_path))
+        image = np.asarray(Image.open(self._image_path))[:, :, :3]
         return image
     
     def get_image_shape(self) -> np.array:
