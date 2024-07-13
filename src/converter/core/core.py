@@ -8,6 +8,7 @@ import cv2
 from src.converter.visualizer.palette.abstract_palette import AbstractPalette
 from src.converter.visualizer.palette.palette_register import PaletteRegister, palette_register
 from ..lable_interface import ILableable
+import copy
 
 
 class Core(ILableable):
@@ -70,6 +71,10 @@ class Core(ILableable):
 
             filtred_bundles = filtred_bundles.union(label_filtered_bundles)
 
+        self._label_names = list(labels)
+        labels = set(labels)
+        for bundle in filtred_bundles:
+            bundle.annotations = list(filter(lambda annotation: annotation.label in labels, bundle.annotations))
 
         self._annotation_bundles = list(filtred_bundles)
 
@@ -99,8 +104,38 @@ class Core(ILableable):
                 
                 filtred_bundles = filtred_bundles.union(label_filtered_bundles)
         
+        self._label_names = list(labels)
+        labels = set(labels)
+        for bundle in filtred_bundles:
+            bundle.annotations = list(filter(lambda annotation: annotation.label in labels, bundle.annotations))
+
         self._annotation_bundles = list(filtred_bundles)
     
+
+    def filter_and_split(self, labels, max_bundles, filter_with_loses=False):
+        annotation_bundles = set(self._annotation_bundles)
+        
+        if filter_with_loses:
+            self.filter_bundles_with_losses(labels, max_bundles)    
+        else:
+            self.filter_bundles(labels, max_bundles)
+        
+        remaining_bundles = annotation_bundles - set(self._annotation_bundles)
+
+        remaining_core = copy.copy(self)
+        remaining_core._annotation_bundles = list(remaining_bundles)
+        
+        remaning_labels = set()
+        for bundle in remaining_core._annotation_bundles:
+            for annotation in bundle.annotations:
+                remaning_labels = remaning_labels.union([annotation.label])
+        
+        remaining_core._label_names = list(remaning_labels)
+
+        return remaining_core
+        
+
+
 
     def count_annotations(self, verbose=0):
         counts = {label: 0 for label in self._label_names}
